@@ -28,10 +28,14 @@ $result = $conn->query($sql);
     <a class="navbar-brand" href="#">🏠 Warehouse System</a>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
-        <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>
-        <li class="nav-item"><a class="nav-link active" href="suppliers.php">ซัพพลายเออร์</a></li>
-        <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link active" href="suppliers.php">ซัพพลายเออร์</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li>
+          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
       </ul>
     </div>
   </div>

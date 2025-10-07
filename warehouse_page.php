@@ -6,105 +6,158 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// ดึงข้อมูลเฉพาะสินค้าที่อยู่ในคลัง (active และ stock_qty > 0)
-$sql = "
-  SELECT p.product_id, p.product_name, c.category_name, s.supplier_name,
-         p.unit, p.selling_price, p.stock_qty, p.image_path
-  FROM products p
-  LEFT JOIN categories c ON p.category_id = c.category_id
-  LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-  WHERE p.stock_qty > 0
-  ORDER BY p.product_id ASC
-";
-$result = $conn->query($sql);
-?>
+// ✅ ดึงข้อมูลบิลรับสินค้าเข้า
+$sql_in = "SELECT p.purchase_id, p.purchase_number, p.purchase_date, 
+                  s.supplier_name, p.total_amount
+           FROM purchases p
+           LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+           ORDER BY p.purchase_date DESC";
+$result_in = $conn->query($sql_in);
 
+// ✅ ดึงข้อมูลบิลขายสินค้าออก
+$sql_out = "SELECT sale_id, sale_number, sale_date, total_amount 
+            FROM sales
+            ORDER BY sale_date DESC";
+$result_out = $conn->query($sql_out);
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>คลังสินค้า - ร้านวัสดุก่อสร้าง</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  <style>
-    .table td, .table th {
-      height: 70px;            /* ความสูงเท่ากันทุกแถว */
-      vertical-align: middle;
-    }
-    .img-thumb { width:60px; height:60px; object-fit:cover; border-radius:4px; }
-    .top-actions { display:flex; gap:.5rem; justify-content:flex-end; }
-  </style>
+<meta charset="UTF-8">
+<title>รายการบิลสินค้า</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { background-color: #f8f9fa; }
+.card-bill {
+  margin-top: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.card-bill:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+.card-header {
+  background: linear-gradient(#23231A);
+  color: white;
+  font-weight: 600;
+  border-radius: 15px 15px 0 0;
+}
+.badge-supplier, .badge-customer { background-color: #6c757d; }
+</style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>
-          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">คลังสินค้า</a></li>
-          <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li>
-          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
 
-  <div class="container mt-4">
-    <div class="d-flex align-items-center mb-3">
-      <h2 class="me-auto">คลังสินค้า</h2>
-      <div class="top-actions">
-        <a href="stock_in_add.php" class="btn btn-primary">รับเข้า (ซื้อสินค้า)</a>
-        <a href="stock_out_add.php" class="btn btn-danger">เบิก/ขายสินค้า</a>
-      </div>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-bordered table-striped">
-        <thead class="table-dark text-center">
-          <tr>
-            <th style="width:6%;">รหัส</th>
-            <th style="width:26%;">ชื่อสินค้า</th>
-            <th style="width:14%;">ประเภท</th>
-            <th style="width:14%;">ซัพพลายเออร์</th>
-            <th style="width:8%;">หน่วย</th>
-            <th style="width:10%;">ราคา (บาท)</th>
-            <th style="width:10%;">จำนวนคงเหลือ</th>
-            <th style="width:6%;">รูป</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if ($result && $result->num_rows > 0): ?>
-            <?php while ($row = $result->fetch_assoc()): ?>
-              <tr>
-                <td class="text-center"><?php echo htmlspecialchars($row['product_id']); ?></td>
-                <td><?php echo htmlspecialchars($row['product_name']); ?></td>
-                <td class="text-center"><?php echo htmlspecialchars($row['category_name'] ?: '-'); ?></td>
-                <td class="text-center"><?php echo htmlspecialchars($row['supplier_name'] ?: '-'); ?></td>
-                <td class="text-center"><?php echo htmlspecialchars($row['unit'] ?: '-'); ?></td>
-                <td class="text-end"><?php echo number_format($row['selling_price'],2); ?></td>
-                <td class="text-center"><?php echo (int)$row['stock_qty']; ?></td>
-                <td class="text-center">
-                  <?php if (!empty($row['image_path'])): ?>
-                    <img class="img-thumb" src="<?php echo htmlspecialchars($row['image_path']); ?>" alt="<?php echo htmlspecialchars($row['product_name']); ?>">
-                  <?php else: ?>
-                    <span class="text-muted">ไม่มีรูป</span>
-                  <?php endif; ?>
-                </td>
-              </tr>
-            <?php endwhile; ?>
-          <?php else: ?>
-            <tr><td colspan="8" class="text-center text-muted">ไม่มีสินค้าที่อยู่ในคลัง (stock)</td></tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
+<!-- เมนูบน -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
+        <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+        <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
+        <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
+        <li class="nav-item"><a class="nav-link  active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
+        <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li>
+        <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+        <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+      </ul>
     </div>
   </div>
+</nav>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<div class="container mt-4 mb-5">
+  <h2 class="fw-bold mb-4">📋 รายการบิลสินค้า</h2>
+
+  <!-- แท็บเลือกดู -->
+  <ul class="nav nav-tabs" id="billTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="in-tab" data-bs-toggle="tab" data-bs-target="#in" type="button" role="tab">
+        📦 บิลรับสินค้าเข้า
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="out-tab" data-bs-toggle="tab" data-bs-target="#out" type="button" role="tab">
+        🚚 บิลขายสินค้าออก
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3" id="billTabsContent">
+
+    <!-- ✅ แท็บ: บิลรับสินค้าเข้า -->
+    <div class="tab-pane fade show active" id="in" role="tabpanel">
+      <a href="stock_in_add.php" class="btn btn-primary mb-3">+ เพิ่มบิลรับสินค้า</a>
+      <div class="row g-4">
+        <?php if ($result_in && $result_in->num_rows > 0): ?>
+          <?php while ($row = $result_in->fetch_assoc()): ?>
+            <div class="col-md-6 col-lg-4">
+              <div class="card card-bill">
+                <div class="card-header d-flex justify-content-between">
+                  <span>เลขที่บิล: <?= htmlspecialchars($row['purchase_number']) ?></span>
+                  <span><?= date("d/m/Y", strtotime($row['purchase_date'])) ?></span>
+                </div>
+                <div class="card-body">
+                  <p><strong>ซัพพลายเออร์:</strong> 
+                     <span class="badge badge-supplier"><?= htmlspecialchars($row['supplier_name']) ?: '-' ?></span></p>
+                  <p><strong>ยอดรวม:</strong> 
+                     <span class="text-success fw-bold"><?= number_format($row['total_amount'], 2) ?> บาท</span></p>
+                  <div class="text-end">
+                    <a href="purchase_detail.php?id=<?= $row['purchase_id'] ?>" 
+                       class="btn btn-outline-primary btn-sm">ดูรายละเอียด</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <?php endwhile; ?>
+        <?php else: ?>
+          <div class="text-center text-muted mt-4">
+            <h5>ยังไม่มีบิลรับสินค้า</h5>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- ✅ แท็บ: บิลขายสินค้าออก -->
+    <div class="tab-pane fade" id="out" role="tabpanel">
+      <a href="stock_out_add.php" class="btn btn-warning mb-3 text-dark">+ เพิ่มบิลขายสินค้า</a>
+      <div class="row g-4">
+        <?php if ($result_out && $result_out->num_rows > 0): ?>
+          <?php while ($row = $result_out->fetch_assoc()): ?>
+            <div class="col-md-6 col-lg-4">
+              <div class="card card-bill">
+                <div class="card-header d-flex justify-content-between">
+                  <span>เลขที่บิล: <?= htmlspecialchars($row['sale_number']) ?></span>
+                  <span><?= date("d/m/Y", strtotime($row['sale_date'])) ?></span>
+                </div>
+                <div class="card-body">
+                  <p><strong>ลูกค้า:</strong> 
+                    <span class="badge badge-customer">ลูกค้าทั่วไป</span></p>
+                  <p><strong>ยอดรวม:</strong> 
+                     <span class="text-danger fw-bold"><?= number_format($row['total_amount'], 2) ?> บาท</span></p>
+                  <div class="text-end">
+                    <a href="sale_detail.php?id=<?= $row['sale_id'] ?>" 
+                       class="btn btn-outline-danger btn-sm">ดูรายละเอียด</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <?php endwhile; ?>
+        <?php else: ?>
+          <div class="text-center text-muted mt-4">
+            <h5>ยังไม่มีบิลขายสินค้า</h5>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

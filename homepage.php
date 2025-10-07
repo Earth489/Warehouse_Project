@@ -8,35 +8,28 @@ if (!isset($_SESSION['user_id'])) {
     exit();  
 }
 
-// ───────────────────────────────
-// ดึงข้อมูลสรุปจากฐานข้อมูล (ไม่ใช้ status แล้ว)
-// ───────────────────────────────
+//สินค้าขายดีประจำเดือนล่าสุด
 
-// สินค้าทั้งหมด
-$totalProducts = $conn->query("
-    SELECT COUNT(*) AS total FROM products
-")->fetch_assoc()['total'];
+// หาวันที่เดือนล่าสุดที่มีการขาย
+$latest_month = $conn->query("
+  SELECT DATE_FORMAT(MAX(sale_date), '%Y-%m') AS latest_month 
+  FROM sales
+")->fetch_assoc()['latest_month'];
 
-// สินค้าที่มีในสต็อก (stock_qty > 0)
-$totalStock = $conn->query("
-    SELECT COUNT(*) AS total 
-    FROM products 
-    WHERE stock_qty > 0
-")->fetch_assoc()['total'];
-
-// สินค้าใกล้หมด (stock_qty > 0 และ stock_qty <= reorder_level)
-$lowStock = $conn->query("
-    SELECT COUNT(*) AS total 
-    FROM products 
-    WHERE stock_qty > 0 AND stock_qty <= reorder_level
-")->fetch_assoc()['total'];
-
-// สินค้าหมด (stock_qty = 0)
-$outStock = $conn->query("
-    SELECT COUNT(*) AS total 
-    FROM products 
-    WHERE stock_qty = 0
-")->fetch_assoc()['total'];
+$topProducts = [];
+if ($latest_month) {
+    $sql = "
+        SELECT p.product_name, SUM(sd.quantity) AS total_sold
+        FROM sale_details sd
+        JOIN sales s ON sd.sale_id = s.sale_id
+        JOIN products p ON sd.product_id = p.product_id
+        WHERE DATE_FORMAT(s.sale_date, '%Y-%m') = '$latest_month'
+        GROUP BY sd.product_id
+        ORDER BY total_sold DESC
+        LIMIT 4
+    ";
+    $topProducts = $conn->query($sql);
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -57,8 +50,10 @@ $outStock = $conn->query("
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link active" href="homepage.php">หน้าแรก</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>
-          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">คลังสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li>
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
@@ -70,44 +65,33 @@ $outStock = $conn->query("
   <!-- เนื้อหาหลัก -->
   <div class="container my-5">
     <h1 class="mb-4">ระบบจัดการคลังสินค้า</h1>
-    <p>ยินดีต้อนรับสู่ระบบจัดการคลังสินค้าของร้านวัสดุก่อสร้าง  
-      ที่หน้านี้คุณสามารถดูภาพรวมของระบบได้</p>
 
-    <!-- การ์ดสรุปยอด -->
     <div class="row text-center">
+  <h3 class="mb-4">🔥 สินค้าขายดีประจำเดือน 
+    <?php echo $latest_month ? date("m/Y", strtotime($latest_month . "-01")) : "ไม่มีข้อมูล"; ?>
+  </h3>
+
+  <?php if ($topProducts && $topProducts->num_rows > 0): ?>
+    <?php 
+      $colors = ['primary', 'success', 'warning', 'danger'];
+      $i = 0;
+      while ($row = $topProducts->fetch_assoc()): 
+    ?>
       <div class="col-md-3">
-        <div class="card bg-primary text-white mb-3">
+        <div class="card bg-<?php echo $colors[$i % 4]; ?> text-white mb-3">
           <div class="card-body">
-            <h4><?php echo $totalProducts; ?></h4>
-            <p>สินค้าทั้งหมด</p>
+            <h4><?php echo number_format($row['total_sold']); ?></h4>
+            <p><?php echo htmlspecialchars($row['product_name']); ?></p>
           </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="card bg-success text-white mb-3">
-          <div class="card-body">
-            <h4><?php echo $totalStock; ?></h4>
-            <p>สินค้าในสต็อก (มีของ)</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card bg-warning text-dark mb-3">
-          <div class="card-body">
-            <h4><?php echo $lowStock; ?></h4>
-            <p>สินค้าใกล้หมด (ต่ำกว่าจุดสั่งซื้อใหม่)</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card bg-danger text-white mb-3">
-          <div class="card-body">
-            <h4><?php echo $outStock; ?></h4>
-            <p>สินค้า Out of Stock (หมด)</p>
-          </div>
-        </div>
-      </div>
+    <?php $i++; endwhile; ?>
+  <?php else: ?>
+    <div class="text-center text-muted mt-3">
+      <p>ไม่มีข้อมูลการขายในเดือนล่าสุด</p>
     </div>
+  <?php endif; ?>
+</div>
 
     <!-- ตารางสินค้าใกล้หมด -->
     <h3 class="mt-5">สินค้าใกล้หมด</h3>
@@ -150,11 +134,11 @@ $outStock = $conn->query("
     </table>
   </div>
 
-  <!-- Footer -->
-  <footer class="bg-dark text-white text-center p-3 mt-5">
+  <!-- Footer 
+ <footer class="bg-dark text-white text-center p-3 mt-5">
     © 2025 ระบบจัดการคลังสินค้า - ร้านวัสดุก่อสร้าง
-  </footer>
-
+    </footer>
+-->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

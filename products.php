@@ -47,11 +47,13 @@ $result = $conn->query($sql);
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
           <li class="nav-item"><a class="nav-link active" href="products.php">สินค้า</a></li>
-          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">คลังสินค้า</a></li>
-          <li class="nav-item"><a class="nav-link" href=".php">ประวัติ</a></li>
-          <li class="nav-item"><a class="nav-link" href=".php">รายงาน</a></li>
-          <li class="nav-item"><a class="nav-link" href=".php">ออกจากระบบ</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li>
+          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
         </ul>
       </div>
     </div>
@@ -64,17 +66,7 @@ $result = $conn->query($sql);
   <!-- ปุ่ม + เพิ่มสินค้าใหม่ -->
 <a href="add_product.php" class="btn btn-primary mb-3">+ เพิ่มสินค้าใหม่</a>
 
-  <!-- ปุ่มด้านขวา -->
-<div style="position: absolute; right: 0; top: 38px;">
-  <a href="categories.php" class="btn" 
-     style="background-color: #323232; color: #fff; margin-left: 5px;">
-     ประเภทสินค้า
-  </a>
-  <a href="suppliers.php" class="btn" 
-     style="background-color: #323232; color: #fff; margin-left: 5px;">
-     ซัพพลายเออร์
-  </a>
-</div>
+
 
 </div>
 
@@ -88,6 +80,7 @@ $result = $conn->query($sql);
         <th>ซัพพลายเออร์</th>
         <th>หน่วยนับ</th>
         <th>ราคา (บาท)</th>
+        <th>จำนวนคงเหลือ</th> <!-- ✅ เพิ่ม -->
         <th>ระดับแจ้งเตือน</th>
         <th>รูปสินค้า</th>
         <th>การจัดการ</th>
@@ -104,6 +97,7 @@ $result = $conn->query($sql);
                       <td>{$row['supplier_name']}</td>
                       <td>{$row['unit']}</td>
                       <td>{$row['selling_price']}</td>
+                      <td>{$row['stock_qty']}</td> <!-- ✅ แสดงจำนวน -->
                       <td>{$row['reorder_level']}</td>
                       <td>";
               if (!empty($row['image_path'])) {
@@ -118,10 +112,10 @@ $result = $conn->query($sql);
                             onclick=\"return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?');\" 
                             class='btn btn-danger btn-sm'>ลบ</a>
                         </td>
-                        </tr>";
+                    </tr>";
           }
       } else {
-          echo "<tr><td colspan='10' class='text-center text-muted'>ไม่มีสินค้าในระบบ</td></tr>";
+          echo "<tr><td colspan='11' class='text-center text-muted'>ไม่มีสินค้าในระบบ</td></tr>";
       }
       ?>
     </tbody>

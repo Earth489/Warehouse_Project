@@ -12,7 +12,6 @@ if (!isset($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_name   = $_POST['product_name'];
     $category_id    = $_POST['category_id'];
-    $supplier_id    = $_POST['supplier_id'];
     $unit           = $_POST['unit'];
     $selling_price  = $_POST['selling_price'];
     $reorder_level  = $_POST['reorder_level'];
@@ -32,12 +31,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // บันทึกลง DB (ไม่ยุ่ง stock_qty)
+    // ✅ บันทึกลง DB (ไม่ต้องใช้ supplier_id)
     $stmt = $conn->prepare("INSERT INTO products 
-        (product_name, category_id, supplier_id, unit, selling_price, reorder_level, image_path) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("siissis", 
-        $product_name, $category_id, $supplier_id, $unit, $selling_price, $reorder_level, $image_path
+        (product_name, category_id, unit, selling_price, reorder_level, image_path) 
+        VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sisdss", 
+        $product_name, $category_id, $unit, $selling_price, $reorder_level, $image_path
     );
 
     if ($stmt->execute()) {
@@ -80,25 +79,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="mb-3">
-      <label class="form-label">ผู้จำหน่าย</label>
-      <select name="supplier_id" class="form-select" required>
-        <option value="">-- เลือกผู้จำหน่าย --</option>
-        <?php
-        $sup = $conn->query("SELECT supplier_id, supplier_name FROM suppliers");
-        while ($row = $sup->fetch_assoc()) {
-            echo "<option value='{$row['supplier_id']}'>{$row['supplier_name']}</option>";
-        }
-        ?>
-      </select>
-    </div>
-
-    <div class="mb-3">
       <label class="form-label">หน่วยนับ</label>
       <input type="text" name="unit" class="form-control" required>
     </div>
 
     <div class="mb-3">
-      <label class="form-label">ราคาขาย</label>
+      <label class="form-label">ราคาขาย (บาท)</label>
       <input type="number" step="0.01" name="selling_price" class="form-control" required>
     </div>
 

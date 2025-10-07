@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 05, 2025 at 07:15 PM
+-- Generation Time: Oct 07, 2025 at 04:07 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -38,7 +38,8 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`category_id`, `category_name`, `description`) VALUES
-(1, 'วัสดุก่อสร้างหลัก', 'พวกอิฐ หิน ปูน ทราย');
+(1, 'วัสดุก่อสร้างหลัก', 'พวกอิฐ หิน ปูน ทราย'),
+(5, 'อุปกรณ์เสริม', '');
 
 -- --------------------------------------------------------
 
@@ -63,9 +64,8 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `supplier_id`, `unit`, `stock_qty`, `selling_price`, `reorder_level`, `image_path`) VALUES
-(1, 'ปูนซีเมนต์', 1, 1, 'ถุง', 19, 250.00, 20, 'uploads/1759124763_63b971f0e3402574ae63b25b7625a0c5_400x300-removebg-preview.png'),
-(2, 'กไกฟกไฟ', 1, 1, 'ถุง', 0, 515.00, 23, 'uploads/1759124798_I121-HS68PH2125_0.jpg'),
-(3, 'ดำดหดห', 1, 1, 'ถุง', 0, 252.00, 45, 'uploads/1759124825_images__1_-removebg-preview.png');
+(7, 'ปูนซีเมนต์', 1, 1, 'ถุง', 90, 80.00, 20, 'uploads/1759834971_ปูน.png'),
+(8, 'ทราย', 1, 1, 'ถุง', 90, 50.00, 20, 'uploads/1759834997_ทราย.jpg');
 
 -- --------------------------------------------------------
 
@@ -75,6 +75,7 @@ INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `supplier_i
 
 CREATE TABLE `purchases` (
   `purchase_id` int(11) NOT NULL,
+  `purchase_number` varchar(50) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `supplier_id` int(11) DEFAULT NULL,
   `purchase_date` datetime DEFAULT current_timestamp(),
@@ -85,8 +86,9 @@ CREATE TABLE `purchases` (
 -- Dumping data for table `purchases`
 --
 
-INSERT INTO `purchases` (`purchase_id`, `user_id`, `supplier_id`, `purchase_date`, `total_amount`) VALUES
-(1, 1, 1, '2025-10-02 11:38:48', 12500.00);
+INSERT INTO `purchases` (`purchase_id`, `purchase_number`, `user_id`, `supplier_id`, `purchase_date`, `total_amount`) VALUES
+(9, '22154855', 1, 1, '2025-10-07 00:00:00', 5500.00),
+(11, '22154856', 1, 1, '2025-10-07 00:00:00', 4400.00);
 
 -- --------------------------------------------------------
 
@@ -107,7 +109,10 @@ CREATE TABLE `purchase_details` (
 --
 
 INSERT INTO `purchase_details` (`purchase_detail_id`, `purchase_id`, `product_id`, `quantity`, `purchase_price`) VALUES
-(1, 1, 1, 50, 250.00);
+(8, 9, 8, 50, 40.00),
+(9, 9, 7, 50, 70.00),
+(12, 11, 7, 40, 70.00),
+(13, 11, 8, 40, 40.00);
 
 -- --------------------------------------------------------
 
@@ -117,6 +122,7 @@ INSERT INTO `purchase_details` (`purchase_detail_id`, `purchase_id`, `product_id
 
 CREATE TABLE `sales` (
   `sale_id` int(11) NOT NULL,
+  `sale_number` varchar(20) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   `sale_date` datetime DEFAULT current_timestamp(),
   `total_amount` decimal(12,2) DEFAULT NULL
@@ -154,7 +160,9 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`supplier_id`, `supplier_name`, `address`, `phone`) VALUES
-(1, 'บริษัท A', 'กรุงเทะ ', '0999999999');
+(1, 'บริษัท A', 'กรุงเทพ', '0999999999'),
+(3, 'บริษัท B', 'กรุงเทพ', '0888888888'),
+(4, 'บริษัท C', 'กรุงเทพ', '0777777777');
 
 -- --------------------------------------------------------
 
@@ -244,25 +252,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `purchase_details`
 --
 ALTER TABLE `purchase_details`
-  MODIFY `purchase_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `purchase_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `sales`
@@ -280,7 +288,7 @@ ALTER TABLE `sale_details`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`
