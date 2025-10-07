@@ -1,6 +1,6 @@
 body {
     font-weight: bold;
-    background-color: #74E27D;
+    background-color: #86819e;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -9,7 +9,7 @@ body {
     text-align: center;
 }
 form {
-    background: white;
+    background: #261f32;
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -18,14 +18,18 @@ form {
 .form-label {
    margin-bottom: 0px; /* เพิ่มระยะห่างระหว่าง label และ input */
    font-weight: bold;
+   color: #fbfafb;
 }
-
+h1{
+    color: #fbfafb;
+}
 .form-control {
-    background-color: #e0e0e0;
+    background-color: #cfcdd4;
     border: none;
 }
+
 .btn-login {
-    background-color: #5563DE;
+    background-color: #594ba0;
     color: white;
     width: 100%;
     padding: 10px;
@@ -35,11 +39,11 @@ form {
     font-weight: bold;
 }
 .btn-login:hover {
-    background-color: #505050;
+    background-color: #5563DE;
 }
 .divider {
     margin: 20px 0;
-    border-bottom: 1px solid #606060;
+    border-bottom: 1px solid #41394f;
 }
 a {
     text-decoration: none;

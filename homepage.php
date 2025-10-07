@@ -68,7 +68,7 @@ if ($latest_month) {
 
     <div class="row text-center">
   <h3 class="mb-4">🔥 สินค้าขายดีประจำเดือน 
-    <?php echo $latest_month ? date("m/Y", strtotime($latest_month . "-01")) : "ไม่มีข้อมูล"; ?>
+    <?php echo $latest_month ? date("m/Y", strtotime($latest_month . "-01")) : ""; ?>
   </h3>
 
   <?php if ($topProducts && $topProducts->num_rows > 0): ?>

@@ -72,18 +72,18 @@ body { background-color: #f8f9fa; }
 </nav>
 
 <div class="container mt-4 mb-5">
-  <h2 class="fw-bold mb-4">📋 รายการบิลสินค้า</h2>
+  <h2 class="fw-bold mb-4"> รายการบิลสินค้า</h2>
 
   <!-- แท็บเลือกดู -->
   <ul class="nav nav-tabs" id="billTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="in-tab" data-bs-toggle="tab" data-bs-target="#in" type="button" role="tab">
-        📦 บิลรับสินค้าเข้า
+         บิลรับสินค้าเข้า
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="out-tab" data-bs-toggle="tab" data-bs-target="#out" type="button" role="tab">
-        🚚 บิลขายสินค้าออก
+         บิลขายสินค้าออก
       </button>
     </li>
   </ul>

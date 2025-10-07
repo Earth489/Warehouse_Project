@@ -59,7 +59,7 @@ body {
 
 <div class="container mt-5 mb-5">
   <div class="card">
-    <div class="card-header bg-primary text-white">
+    <div class="card-header bg-dark text-white">
       <h4 class="mb-0">รายละเอียดบิลรับสินค้า</h4>
     </div>
     <div class="card-body">
@@ -72,7 +72,7 @@ body {
           <p><strong>ที่อยู่:</strong> <?= htmlspecialchars($purchase['address'] ?? '-') ?></p>
         </div>
 
-        <h5 class="mt-4">📦 รายการสินค้า</h5>
+        <h5 class="mt-4"> รายการสินค้า</h5>
         <table class="table table-bordered mt-3">
           <thead class="table-light">
             <tr>
@@ -109,7 +109,7 @@ body {
       <?php endif; ?>
 
       <div class="mt-4">
-        <a href="warehouse_page.php" class="btn btn-secondary">⬅ กลับ</a>
+        <a href="warehouse_page.php" class="btn btn-secondary">กลับ</a>
       </div>
     </div>
   </div>
