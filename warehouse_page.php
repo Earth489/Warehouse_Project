@@ -141,8 +141,8 @@ body { background-color: #f8f9fa; }
                   <p><strong>ยอดรวม:</strong> 
                      <span class="text-danger fw-bold"><?= number_format($row['total_amount'], 2) ?> บาท</span></p>
                   <div class="text-end">
-                    <a href="sale_detail.php?id=<?= $row['sale_id'] ?>" 
-                       class="btn btn-outline-danger btn-sm">ดูรายละเอียด</a>
+                    <a href="sale_detail.php?sale_id=<?= $row['sale_id'] ?>" 
+                      class="btn btn-outline-danger btn-sm">ดูรายละเอียด</a>
                   </div>
                 </div>
               </div>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 07, 2025 at 04:07 PM
+-- Generation Time: Oct 23, 2025 at 05:36 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -64,8 +64,8 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `supplier_id`, `unit`, `stock_qty`, `selling_price`, `reorder_level`, `image_path`) VALUES
-(7, 'ปูนซีเมนต์', 1, 1, 'ถุง', 90, 80.00, 20, 'uploads/1759834971_ปูน.png'),
-(8, 'ทราย', 1, 1, 'ถุง', 90, 50.00, 20, 'uploads/1759834997_ทราย.jpg');
+(7, 'ปูนซีเมนต์', 1, 1, 'ถุง', 20, 80.00, 20, 'uploads/1759834971_ปูน.png'),
+(8, 'ทราย', 1, 1, 'ถุง', 10, 50.00, 20, 'uploads/1759834997_ทราย.jpg');
 
 -- --------------------------------------------------------
 
@@ -128,6 +128,14 @@ CREATE TABLE `sales` (
   `total_amount` decimal(12,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `sales`
+--
+
+INSERT INTO `sales` (`sale_id`, `sale_number`, `user_id`, `sale_date`, `total_amount`) VALUES
+(2, 'SO20251023053157', 1, '2025-10-23 00:00:00', 5700.00),
+(3, 'SO20251023053334', 1, '2025-10-23 00:00:00', 3900.00);
+
 -- --------------------------------------------------------
 
 --
@@ -141,6 +149,16 @@ CREATE TABLE `sale_details` (
   `quantity` int(11) NOT NULL,
   `sale_price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sale_details`
+--
+
+INSERT INTO `sale_details` (`sale_detail_id`, `sale_id`, `product_id`, `quantity`, `sale_price`) VALUES
+(1, 2, 8, 50, 50.00),
+(2, 2, 7, 40, 80.00),
+(3, 3, 8, 30, 50.00),
+(4, 3, 7, 30, 80.00);
 
 -- --------------------------------------------------------
 
@@ -276,13 +294,13 @@ ALTER TABLE `purchase_details`
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `sale_details`
 --
 ALTER TABLE `sale_details`
-  MODIFY `sale_detail_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `sale_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
