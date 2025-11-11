@@ -54,7 +54,7 @@ if ($latest_month) {
           <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
           <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
           <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-          <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li>
+         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -67,13 +67,13 @@ if ($latest_month) {
     <h1 class="mb-4">ระบบจัดการคลังสินค้า</h1>
 
     <div class="row text-center">
-  <h3 class="mb-4">🔥 สินค้าขายดีประจำเดือน 
+  <h3 class="mb-4">สินค้าขายดีประจำเดือน 
     <?php echo $latest_month ? date("m/Y", strtotime($latest_month . "-01")) : ""; ?>
   </h3>
 
   <?php if ($topProducts && $topProducts->num_rows > 0): ?>
     <?php 
-      $colors = ['primary', 'success', 'warning', 'danger'];
+      $colors = ['success', 'success', 'success', 'success'];
       $i = 0;
       while ($row = $topProducts->fetch_assoc()): 
     ?>

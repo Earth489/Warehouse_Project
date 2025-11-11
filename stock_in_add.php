@@ -57,23 +57,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ins->execute();
             $purchase_id = $ins->insert_id;
             $ins->close();
-
+            
+            // เตรียม PreparedStatement สำหรับการบันทึกรายละเอียดการซื้อ
             $insDet = $conn->prepare("INSERT INTO purchase_details (purchase_id, product_id, quantity, purchase_price) VALUES (?, ?, ?, ?)");
-            $updStock = $conn->prepare("UPDATE products SET stock_qty = stock_qty + ?, supplier_id = ? WHERE product_id = ?");
-
+            
+            // เตรียม PreparedStatement สำหรับดึงข้อมูล supplier_id ปัจจุบันของสินค้า
+            $getProdSupplier = $conn->prepare("SELECT supplier_id, product_name FROM products WHERE product_id = ?");
+            
+            // เตรียม PreparedStatement สำหรับอัปเดต stock_qty และ supplier_id
+            $updStockAndSupplier = $conn->prepare("UPDATE products SET stock_qty = stock_qty + ?, supplier_id = ? WHERE product_id = ?");
+            
+            // เตรียม PreparedStatement สำหรับอัปเดต stock_qty เท่านั้น
+            $updStockOnly = $conn->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE product_id = ?");
 
             foreach ($items as $it) {
-                // บันทึกรายละเอียดสินค้า
+                // 1. ดึงข้อมูล supplier_id ปัจจุบันและชื่อสินค้า
+                $getProdSupplier->bind_param("i", $it['product_id']);
+                $getProdSupplier->execute();
+                $prodData = $getProdSupplier->get_result()->fetch_assoc();
+                $current_product_supplier_id = $prodData['supplier_id'];
+                $product_name_for_error = $prodData['product_name'];
+
+                // 2. ตรวจสอบเงื่อนไข supplier_id และอัปเดตสต็อก
+                if ($current_product_supplier_id === NULL) {
+                    // กรณีที่ 1: สินค้ายังไม่มี supplier_id ให้บันทึก supplier_id ใหม่
+                    $updStockAndSupplier->bind_param("iii", $it['qty'], $supplier_id, $it['product_id']);
+                    $updStockAndSupplier->execute();
+                } elseif ($current_product_supplier_id == $supplier_id) {
+                    // กรณีที่ 2a: สินค้ามี supplier_id อยู่แล้วและตรงกับที่เลือก ให้เพิ่มสต็อกเท่านั้น
+                    $updStockOnly->bind_param("ii", $it['qty'], $it['product_id']);
+                    $updStockOnly->execute();
+                } else {
+                    // กรณีที่ 2b: สินค้ามี supplier_id อยู่แล้วแต่ไม่ตรงกับที่เลือก ให้ยกเลิกและแจ้งเตือน
+                    throw new Exception("ไม่สามารถเพิ่มสินค้า " . htmlspecialchars($product_name_for_error) . " ได้ เพราะสินค้านี้ผูกกับ Supplier เดิม");
+                }
+
+                // บันทึกรายละเอียดการซื้อ
                 $insDet->bind_param("iiid", $purchase_id, $it['product_id'], $it['qty'], $it['price']);
                 $insDet->execute();
-
-                // อัปเดต stock + supplier_id
-                $updStock->bind_param("iii", $it['qty'], $supplier_id, $it['product_id']);
-                $updStock->execute();
             }
-
             $insDet->close();
-            $updStock->close();
+            $getProdSupplier->close();
+            $updStockAndSupplier->close();
+            $updStockOnly->close();
             $conn->commit();
 
             header("Location: warehouse_page.php?msg=stockin_ok");
@@ -93,6 +119,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 </head>
 <body>
+
+<!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
+          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
+         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
 <div class="container mt-4">
   <h2>รับสินค้าเข้าคลัง (Stock In)</h2>
 
@@ -129,6 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <th>หน่วย</th>
           <th>ราคาซื้อ (บาท)</th>
           <th>จำนวน</th>
+          <th>ราคารวม</th>
           <th></th>
         </tr>
       </thead>
@@ -147,9 +197,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </select>
           </td>
           <td><input type="text" class="form-control cat" readonly></td>
-          <td><input type="text" class="form-control unit" readonly></td>
+          <td>
+            <select class="form-select unit" name="unit">
+              <option value="">-- เลือกหน่วยนับ --</option>
+              <option value="ถุง">ถุง</option>
+              <option value="หลอด">หลอด</option>
+              <option value="อัน">อัน</option>
+              <option value="กระป๋อง">กระป๋อง</option>
+              <option value="ใบ">ใบ</option>
+              <option value="ถัง">ถัง</option>
+              <option value="กล่อง">กล่อง</option>
+              <option value="แท่ง">แท่ง</option>
+              <option value="เส้น">เส้น</option>
+            </select>
+          </td>
           <td><input type="number" step="0.01" name="purchase_price[]" class="form-control text-end" required></td>
           <td><input type="number" name="quantity[]" class="form-control text-center" min="1" required></td>
+          <td><input type="text" class="form-control text-end row-total" readonly></td>
           <td><button type="button" class="btn btn-danger btn-remove">-</button></td>
         </tr>
       </tbody>
@@ -157,10 +221,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <button type="button" id="btnAdd" class="btn btn-secondary">+ เพิ่มแถว</button>
     <button type="submit" class="btn btn-primary">บันทึก</button>
-    <a href="warehouse_page.php" class="btn btn-outline-secondary">ยกเลิก</a>
+        <a href="warehouse_page.php" class="btn btn-outline-secondary">ยกเลิก</a>
+
+        <div class="mt-3">
+            <p>ราคารวม (ก่อน VAT): <span id="totalBeforeVat">0.00</span> บาท</p>
+            <p>VAT (7%): <span id="vatAmount">0.00</span> บาท</p>
+            <p>ราคารวมทั้งหมด: <span id="totalAmount">0.00</span> บาท</p>
+        </div>
   </form>
 </div>
-
+<!-- สคริปต์ JavaScript -->
 <script>
 document.querySelectorAll('select[name="product[]"]').forEach(sel=>{
   sel.addEventListener('change',function(){
@@ -170,6 +240,7 @@ document.querySelectorAll('select[name="product[]"]').forEach(sel=>{
     tr.querySelector('.unit').value=opt.dataset.unit||'';
   });
 });
+
 document.getElementById('btnAdd').addEventListener('click',()=>{
   const tb=document.querySelector('#itemBody');
   const row=tb.children[0].cloneNode(true);
@@ -183,8 +254,58 @@ document.getElementById('btnAdd').addEventListener('click',()=>{
     tr.querySelector('.unit').value=opt.dataset.unit||'';
   });
   row.querySelector('.btn-remove').addEventListener('click',()=>row.remove());
+  
+  // เพิ่ม event listener ให้กับแถวใหม่
+  row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]').forEach(input => {
+      input.addEventListener('input', () => updateRowAndTotals(row));
+  });
+    // เรียกใช้งานฟังก์ชัน updateTotals หลังจากเพิ่มแถวใหม่
+    updateTotals();
 });
+
 document.querySelectorAll('.btn-remove').forEach(b=>b.addEventListener('click',()=>b.closest('tr').remove()));
+
+// ฟังก์ชันคำนวณราคารวม
+function calculateTotal(row) {
+    const price = parseFloat(row.querySelector('input[name="purchase_price[]"]').value) || 0;
+    const quantity = parseInt(row.querySelector('input[name="quantity[]"]').value) || 0;
+    const total = price * quantity;
+    // อัปเดตช่องราคารวมของแถว
+    row.querySelector('.row-total').value = total.toFixed(2);
+    return total;
+}
+
+// ฟังก์ชันอัปเดตผลรวมทั้งหมด
+function updateTotals() {
+    let subtotal = 0;
+    document.querySelectorAll('#itemBody tr').forEach(row => {
+        const price = parseFloat(row.querySelector('input[name="purchase_price[]"]').value) || 0;
+        const quantity = parseInt(row.querySelector('input[name="quantity[]"]').value) || 0;
+        const rowTotal = price * quantity;
+        row.querySelector('.row-total').value = rowTotal.toFixed(2);
+        subtotal += rowTotal;
+    });
+
+    const vat = subtotal * 0.07;
+    const total = subtotal + vat;
+
+    document.getElementById('totalBeforeVat').textContent = subtotal.toFixed(2);
+    document.getElementById('vatAmount').textContent = vat.toFixed(2);
+    document.getElementById('totalAmount').textContent = total.toFixed(2);
+}
+
+// เพิ่ม event listener สำหรับการเปลี่ยนแปลงใน input
+function addRowListeners(row) {
+    const inputs = row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]');
+    inputs.forEach(input => {
+        input.addEventListener('input', updateTotals);
+    });
+}
+
+// เพิ่ม listeners ให้กับแถวที่มีอยู่แล้ว
+document.querySelectorAll('#itemBody tr').forEach(addRowListeners);
+
+
 </script>
 </body>
 </html>

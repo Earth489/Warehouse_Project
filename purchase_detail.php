@@ -57,6 +57,28 @@ body {
 </head>
 <body>
 
+<!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
+          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
+         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
 <div class="container mt-5 mb-5">
   <div class="card">
     <div class="card-header bg-dark text-white">

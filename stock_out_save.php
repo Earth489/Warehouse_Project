@@ -17,10 +17,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
     try {
         // คำนวณยอดรวมทั้งหมด
         $total_amount = 0;
-        foreach ($product_ids as $pid) {
-            $qty = (int)$quantities[$pid];
-            $price = $conn->query("SELECT selling_price FROM products WHERE product_id=$pid")->fetch_assoc()['selling_price'];
-            $total_amount += $qty * $price;
+        $price_stmt = $conn->prepare("SELECT selling_price FROM products WHERE product_id = ?");
+
+        for ($i = 0; $i < count($product_ids); $i++) {
+            $pid = (int)$product_ids[$i];
+            $qty = (int)$quantities[$i];
+
+            if ($pid > 0 && $qty > 0) {
+                $price_stmt->bind_param("i", $pid);
+                $price_stmt->execute();
+                $price = $price_stmt->get_result()->fetch_assoc()['selling_price'];
+                $total_amount += $qty * $price;
+            }
         }
 
         // บันทึกลงตาราง sales
@@ -32,13 +40,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
         // บันทึกสินค้าใน sale_details และอัปเดตสต็อก
         $stmt_detail = $conn->prepare("INSERT INTO sale_details (sale_id, product_id, quantity, sale_price) VALUES (?, ?, ?, ?)");
 
-        foreach ($product_ids as $pid) {
-            $qty = (int)$quantities[$pid];
+        for ($i = 0; $i < count($product_ids); $i++) {
+            $pid = (int)$product_ids[$i];
+            $qty = (int)$quantities[$i];
 
             // 🔍 ตรวจสอบจำนวนในคลังก่อนขาย
-            $check = $conn->query("SELECT stock_qty, selling_price, product_name FROM products WHERE product_id=$pid");
-            $data = $check->fetch_assoc();
-            $current_stock = (int)$data['stock_qty'];
+            $check_stmt = $conn->prepare("SELECT stock_qty, selling_price, product_name FROM products WHERE product_id = ?");
+            $check_stmt->bind_param("i", $pid);
+            $check_stmt->execute();
+            $data = $check_stmt->get_result()->fetch_assoc();
+            $current_stock = (int)$data['stock_qty']; // แก้ไขการดึงข้อมูล
             $price = $data['selling_price'];
             $product_name = $data['product_name'];
 
@@ -57,7 +68,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
             $stmt_detail->execute();
 
             // และอัปเดตจำนวนคงเหลือ
-            $conn->query("UPDATE products SET stock_qty = stock_qty - $qty WHERE product_id = $pid");
+            $update_stmt = $conn->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE product_id = ?");
+            $update_stmt->bind_param("ii", $qty, $pid);
+            $update_stmt->execute();
         }
 
         $conn->commit();

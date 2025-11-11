@@ -25,7 +25,7 @@ $sql = "
                 p.purchase_date AS bill_date,
                 p.total_amount,
                 s.supplier_name AS party_name,
-                'รับเข้า (Purchase)' AS type,
+                'บิลซื้อ (Purchase)' AS type,
                 'purchase_detail.php' AS detail_page,
                 'id' AS param_name
             FROM purchases p
@@ -39,7 +39,7 @@ $sql = "
                 s.sale_date AS bill_date,
                 s.total_amount,
                 'ลูกค้าทั่วไป' AS party_name,
-                'ขายออก (Sale)' AS type,
+                'บิลขาย (Sale)' AS type,
                 'sale_detail.php' AS detail_page,
                 'sale_id' AS param_name
             FROM sales s
@@ -91,24 +91,27 @@ $result = $stmt->get_result();
 </head>
 <body>
 
-<!-- เมนูบน -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">🏠 Warehouse System</a>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
-        <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
-        <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-        <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-        <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-        <li class="nav-item"><a class="nav-link active" href="history.php">ประวัติ</a></li>
-        <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-        <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
-      </ul>
+<!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
+         <!-- <li class="nav-item"><a class="nav-link active" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+        </ul>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
 <div class="container mt-4">
     <h2 class="fw-bold mb-4">ประวัติการทำรายการ</h2>
@@ -121,8 +124,8 @@ $result = $stmt->get_result();
             <div class="col-md-2">
                 <select name="bill_type" class="form-select">
                     <option value="all" <?= $bill_type == 'all' ? 'selected' : '' ?>>บิลทั้งหมด</option>
-                    <option value="รับเข้า (Purchase)" <?= $bill_type == 'รับเข้า (Purchase)' ? 'selected' : '' ?>>บิลรับเข้า</option>
-                    <option value="ขายออก (Sale)" <?= $bill_type == 'ขายออก (Sale)' ? 'selected' : '' ?>>บิลขายออก</option>
+                    <option value="บิลซื้อ (Purchase)" <?= $bill_type == 'บิลซื้อ (Purchase)' ? 'selected' : '' ?>>บิลรับเข้า</option>
+                    <option value="บิลขาย (Sale)" <?= $bill_type == 'บิลขาย (Sale)' ? 'selected' : '' ?>>บิลขายออก</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -152,7 +155,7 @@ $result = $stmt->get_result();
                     <tr>
                         <td><?= date("d/m/Y", strtotime($row['bill_date'])) ?></td>
                         <td><?= htmlspecialchars($row['bill_number']) ?></td>
-                        <td><span class="badge <?= $row['type'] == 'รับเข้า (Purchase)' ? 'bg-success' : 'bg-danger' ?>"><?= htmlspecialchars($row['type']) ?></span></td>
+                        <td><span class="badge <?= $row['type'] == 'บิลซื้อ (Purchase)' ? 'bg-success' : 'bg-danger' ?>"><?= htmlspecialchars($row['type']) ?></span></td>
                         <td><?= htmlspecialchars($row['party_name']) ?></td>
                         <td class="text-end"><?= number_format($row['total_amount'], 2) ?></td>
                         <td class="text-center"><a href="<?= $row['detail_page'] ?>?<?= $row['param_name'] ?>=<?= $row['bill_id'] ?>" class="btn btn-sm btn-info">ดูรายละเอียด</a></td>

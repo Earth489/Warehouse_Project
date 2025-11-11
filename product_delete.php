@@ -28,11 +28,25 @@ if ($row = $result->fetch_assoc()) {
     }
 }
 
-// ลบสินค้าออกจากฐานข้อมูล
+// ลบสินค้าออกจากฐานข้อมูล พร้อมตรวจจับข้อผิดพลาด
 $sql_delete = "DELETE FROM products WHERE product_id = ?";
 $stmt = $conn->prepare($sql_delete);
 $stmt->bind_param("i", $product_id);
-$stmt->execute();
 
-echo "<script>alert('ลบสินค้าสำเร็จ'); window.location='products.php';</script>";
+try {
+    if ($stmt->execute()) {
+        echo "<script>alert('ลบสินค้าสำเร็จ'); window.location='products.php';</script>";
+    } else {
+        echo "<script>alert('ไม่สามารถลบสินค้าได้'); window.location='products.php';</script>";
+    }
+} catch (mysqli_sql_exception $e) {
+    // ถ้ามี foreign key constraint
+    if ($e->getCode() == 1451) {  // 1451 = Cannot delete or update a parent row
+        echo "<script>alert('ไม่สามารถลบสินค้าได้ เนื่องจากมีการซื้อขายหรือข้อมูลอ้างอิงอยู่'); window.location='products.php';</script>";
+    } else {
+        // กรณีอื่น ๆ
+        echo "<script>alert('เกิดข้อผิดพลาด: " . addslashes($e->getMessage()) . "'); window.location='products.php';</script>";
+    }
+}
+
 ?>

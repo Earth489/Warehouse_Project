@@ -6,19 +6,91 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// ✅ ดึงข้อมูลบิลรับสินค้าเข้า
-$sql_in = "SELECT p.purchase_id, p.purchase_number, p.purchase_date, 
-                  s.supplier_name, p.total_amount
-           FROM purchases p
-           LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-           ORDER BY p.purchase_date DESC";
-$result_in = $conn->query($sql_in);
+// รับค่าจากฟอร์มค้นหา
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
+$search_term = $_GET['search_term'] ?? '';
 
-// ✅ ดึงข้อมูลบิลขายสินค้าออก
-$sql_out = "SELECT sale_id, sale_number, sale_date, total_amount 
-            FROM sales
-            ORDER BY sale_date DESC";
-$result_out = $conn->query($sql_out);
+$params = [];
+$types = '';
+
+// สร้าง SQL พื้นฐานด้วย UNION ALL เพื่อรวมบิลซื้อและขาย
+$sql = "
+    SELECT * FROM (
+        (
+            SELECT 
+                p.purchase_id AS bill_id,
+                p.purchase_number AS bill_number,
+                p.purchase_date AS bill_date,
+                p.total_amount,
+                s.supplier_name AS party_name,
+                'บิลซื้อ (Purchase)' AS type,
+                'purchase_detail.php' AS detail_page,
+                'id' AS param_name
+            FROM purchases p
+            LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+        )
+        UNION ALL
+        (
+            SELECT 
+                s.sale_id AS bill_id,
+                s.sale_number AS bill_number,
+                s.sale_date AS bill_date,
+                s.total_amount,
+                'ลูกค้าทั่วไป' AS party_name,
+                'บิลขาย (Sale)' AS type,
+                'sale_detail.php' AS detail_page,
+                'sale_id' AS param_name
+            FROM sales s
+        )
+    ) AS combined_bills
+    WHERE 1=1
+";
+
+// เพิ่มเงื่อนไขการค้นหา
+if ($start_date) {
+    $sql .= " AND bill_date >= ?";
+    $params[] = $start_date;
+    $types .= 's';
+}
+if ($end_date) {
+    $sql .= " AND bill_date <= ?";
+    $params[] = $end_date;
+    $types .= 's';
+}
+if ($search_term) {
+    $sql .= " AND (bill_number LIKE ? OR party_name LIKE ?)";
+    $like_term = "%" . $search_term . "%";
+    $params[] = $like_term;
+    $params[] = $like_term;
+    $types .= 'ss';
+}
+
+$sql .= " ORDER BY bill_date DESC, bill_id DESC";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+
+// ✅ แยกข้อมูลที่ได้จากการค้นหา (หรือข้อมูลทั้งหมด) ไปยังตัวแปรสำหรับแต่ละแท็บ
+$bills_in = [];
+$bills_out = [];
+
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        if ($row['type'] == 'บิลซื้อ (Purchase)') {
+            $bills_in[] = $row;
+        } else {
+            $bills_out[] = $row;
+        }
+    }
+}
+
+// ปิด statement ที่ไม่ใช้แล้ว
+$stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -50,29 +122,48 @@ body { background-color: #f8f9fa; }
 <body>
 
 <!-- เมนูบน -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">🏠 Warehouse System</a>
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
-        <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
-        <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-        <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-        <li class="nav-item"><a class="nav-link  active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-        <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li>
-        <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-        <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
-      </ul>
+<!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
+          <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
+          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
+         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+        </ul>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
 <div class="container mt-4 mb-5">
   <h2 class="fw-bold mb-4"> รายการบิลสินค้า</h2>
+
+<!-- ฟอร์มค้นหา -->
+    <form method="GET" class="card card-body mb-4">
+        <div class="row g-3">
+            <div class="col-md-3"><input type="date" name="start_date" class="form-control" value="<?= htmlspecialchars($start_date) ?>"></div>
+            <div class="col-md-3"><input type="date" name="end_date" class="form-control" value="<?= htmlspecialchars($end_date) ?>"></div>
+        <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" name="search_term" class="form-control" placeholder="ค้นหาเลขที่บิล, ซัพพลายเออร์..." value="<?= htmlspecialchars($search_term) ?>">
+                    <button class="btn btn-primary" type="submit">ค้นหา</button>
+                </div>
+            </div>
+            <div class="col-md-2 text-end">
+        <a href="warehouse_page.php" class="btn btn-dark w-100"> ล้างค่า </a>
+      </div>
+        </div>
+        
+    </form>
 
   <!-- แท็บเลือกดู -->
   <ul class="nav nav-tabs" id="billTabs" role="tablist">
@@ -90,71 +181,75 @@ body { background-color: #f8f9fa; }
 
   <div class="tab-content mt-3" id="billTabsContent">
 
-    <!-- ✅ แท็บ: บิลรับสินค้าเข้า -->
+    <!-- บิลรับสินค้าเข้า -->
     <div class="tab-pane fade show active" id="in" role="tabpanel">
-      <a href="stock_in_add.php" class="btn btn-primary mb-3">+ เพิ่มบิลรับสินค้า</a>
-      <div class="row g-4">
-        <?php if ($result_in && $result_in->num_rows > 0): ?>
-          <?php while ($row = $result_in->fetch_assoc()): ?>
-            <div class="col-md-6 col-lg-4">
-              <div class="card card-bill">
-                <div class="card-header d-flex justify-content-between">
-                  <span>เลขที่บิล: <?= htmlspecialchars($row['purchase_number']) ?></span>
-                  <span><?= date("d/m/Y", strtotime($row['purchase_date'])) ?></span>
-                </div>
-                <div class="card-body">
-                  <p><strong>ซัพพลายเออร์:</strong> 
-                     <span class="badge badge-supplier"><?= htmlspecialchars($row['supplier_name']) ?: '-' ?></span></p>
-                  <p><strong>ยอดรวม:</strong> 
-                     <span class="text-success fw-bold"><?= number_format($row['total_amount'], 2) ?> บาท</span></p>
-                  <div class="text-end">
-                    <a href="purchase_detail.php?id=<?= $row['purchase_id'] ?>" 
-                       class="btn btn-outline-primary btn-sm">ดูรายละเอียด</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <?php endwhile; ?>
-        <?php else: ?>
-          <div class="text-center text-muted mt-4">
-            <h5>ยังไม่มีบิลรับสินค้า</h5>
-          </div>
-        <?php endif; ?>
-      </div>
+  <a href="stock_in_add.php" class="btn btn-success mb-3">+ เพิ่มบิลรับสินค้า</a>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>วันที่</th>
+                    <th>เลขที่บิล</th>
+                    <th>ซัพพลายเออร์</th>
+                    <th>ยอดรวม (บาท)</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($bills_in)): ?>
+                    <?php foreach ($bills_in as $row): ?>
+                        <tr>
+                            <td><?= date("d/m/Y", strtotime($row['bill_date'])) ?></td>
+                            <td><?= htmlspecialchars($row['bill_number']) ?></td>
+                            <td><?= htmlspecialchars($row['party_name']) ?></td>
+                            <td class="text-end"><?= number_format($row['total_amount'], 2) ?></td>
+                            <td class="text-center">
+                                <a href="<?= $row['detail_page'] ?>?<?= $row['param_name'] ?>=<?= $row['bill_id'] ?>" class="btn btn-sm btn-info">ดูรายละเอียด</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">ไม่พบข้อมูลบิลรับสินค้า</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 
-    <!-- ✅ แท็บ: บิลขายสินค้าออก -->
+    <!-- บิลขายสินค้าออก -->
     <div class="tab-pane fade" id="out" role="tabpanel">
-      <a href="stock_out_add.php" class="btn btn-warning mb-3 text-dark">+ เพิ่มบิลขายสินค้า</a>
-      <div class="row g-4">
-        <?php if ($result_out && $result_out->num_rows > 0): ?>
-          <?php while ($row = $result_out->fetch_assoc()): ?>
-            <div class="col-md-6 col-lg-4">
-              <div class="card card-bill">
-                <div class="card-header d-flex justify-content-between">
-                  <span>เลขที่บิล: <?= htmlspecialchars($row['sale_number']) ?></span>
-                  <span><?= date("d/m/Y", strtotime($row['sale_date'])) ?></span>
-                </div>
-                <div class="card-body">
-                  <p><strong>ลูกค้า:</strong> 
-                    <span class="badge badge-customer">ลูกค้าทั่วไป</span></p>
-                  <p><strong>ยอดรวม:</strong> 
-                     <span class="text-danger fw-bold"><?= number_format($row['total_amount'], 2) ?> บาท</span></p>
-                  <div class="text-end">
-                    <a href="sale_detail.php?sale_id=<?= $row['sale_id'] ?>" 
-                      class="btn btn-outline-danger btn-sm">ดูรายละเอียด</a>
-                  </div>
-                </div>
-              </div>
+  <a href="stock_out_add.php" class="btn btn-danger mb-3">+ เพิ่มบิลขายสินค้า</a>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>วันที่</th>
+                    <th>เลขที่บิล</th>
+                    <th>ยอดรวม (บาท)</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($bills_out)): ?>
+                    <?php foreach ($bills_out as $row): ?>
+                        <tr>
+                            <td><?= date("d/m/Y", strtotime($row['bill_date'])) ?></td>
+                            <td><?= htmlspecialchars($row['bill_number']) ?></td>
+                            <td class="text-end"><?= number_format($row['total_amount'], 2) ?></td>
+                            <td class="text-center">
+                                <a href="<?= $row['detail_page'] ?>?<?= $row['param_name'] ?>=<?= $row['bill_id'] ?>" class="btn btn-sm btn-info">ดูรายละเอียด</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">ไม่พบข้อมูลบิลขายสินค้า</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
             </div>
-          <?php endwhile; ?>
-        <?php else: ?>
-          <div class="text-center text-muted mt-4">
-            <h5>ยังไม่มีบิลขายสินค้า</h5>
-          </div>
-        <?php endif; ?>
-      </div>
-    </div>
   </div>
 </div>
 
