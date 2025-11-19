@@ -73,7 +73,7 @@ body {
           <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
          <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+          <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
       </div>
     </div>
@@ -122,8 +122,17 @@ body {
           </tbody>
         </table>
 
-        <div class="text-end mt-3">
-          <h5><strong>ยอดรวมสุทธิ:</strong> <?= number_format($purchase['total_amount'], 2) ?> บาท</h5>
+        <div class="row justify-content-end mt-3">
+          <div class="col-md-5">
+            <?php
+              $subtotal = $purchase['total_amount'];
+              $vat = $subtotal * 0.07;
+              $grand_total = $subtotal + $vat;
+            ?>
+            <p class="d-flex justify-content-between"><strong>ราคารวม (ก่อน VAT):</strong> <strong><?= number_format($subtotal, 2) ?> บาท</strong></p>
+            <p class="d-flex justify-content-between"><strong>VAT (7%):</strong> <strong><?= number_format($vat, 2) ?> บาท</strong></p>
+            <h5 class="d-flex justify-content-between"><strong>ยอดรวมสุทธิ:</strong> <strong><?= number_format($grand_total, 2) ?> บาท</strong></h5>
+          </div>
         </div>
 
       <?php else: ?>

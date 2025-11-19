@@ -138,7 +138,7 @@ body { background-color: #f8f9fa; }
           <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
          <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+          <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
       </div>
     </div>
@@ -159,7 +159,7 @@ body { background-color: #f8f9fa; }
                 </div>
             </div>
             <div class="col-md-2 text-end">
-        <a href="warehouse_page.php" class="btn btn-dark w-100"> ล้างค่า </a>
+        <a href="warehouse_page.php" class="btn btn-dark w-100">-</a>
       </div>
         </div>
         

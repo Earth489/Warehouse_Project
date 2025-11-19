@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
          <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+          <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
       </div>
     </div>
@@ -103,7 +103,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="mb-3">
       <label class="form-label">หน่วยนับ</label>
-      <input type="text" name="unit" class="form-control" required>
+      <select name="unit" class="form-select" required>
+        <option value="">-- เลือกหน่วยนับ --</option>
+        <option value="ถุง">ถุง</option>
+        <option value="หลอด">หลอด</option>
+        <option value="อัน">อัน</option>
+        <option value="กระป๋อง">กระป๋อง</option>
+        <option value="ใบ">ใบ</option>
+        <option value="ถัง">ถัง</option>
+        <option value="กล่อง">กล่อง</option>
+        <option value="แท่ง">แท่ง</option>
+        <option value="เส้น">เส้น</option>
+      </select>
     </div>
 
     <div class="mb-3">

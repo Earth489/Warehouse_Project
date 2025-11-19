@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $updStockOnly->execute();
                 } else {
                     // กรณีที่ 2b: สินค้ามี supplier_id อยู่แล้วแต่ไม่ตรงกับที่เลือก ให้ยกเลิกและแจ้งเตือน
-                    throw new Exception("ไม่สามารถเพิ่มสินค้า " . htmlspecialchars($product_name_for_error) . " ได้ เพราะสินค้านี้ผูกกับ Supplier เดิม");
+                    throw new Exception("ไม่สามารถเพิ่ม " . htmlspecialchars($product_name_for_error) . " ได้ เพราะสินค้านี้ผูกกับ Supplier เดิม");
                 }
 
                 // บันทึกรายละเอียดการซื้อ
@@ -136,14 +136,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
          <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+          <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
 <div class="container mt-4">
-  <h2>รับสินค้าเข้าคลัง (Stock In)</h2>
+  <h2>รับสินค้าเข้าคลัง</h2>
 
   <?php if ($errors): ?>
     <div class="alert alert-danger"><?php foreach($errors as $e) echo "<div>$e</div>"; ?></div>
@@ -197,20 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </select>
           </td>
           <td><input type="text" class="form-control cat" readonly></td>
-          <td>
-            <select class="form-select unit" name="unit">
-              <option value="">-- เลือกหน่วยนับ --</option>
-              <option value="ถุง">ถุง</option>
-              <option value="หลอด">หลอด</option>
-              <option value="อัน">อัน</option>
-              <option value="กระป๋อง">กระป๋อง</option>
-              <option value="ใบ">ใบ</option>
-              <option value="ถัง">ถัง</option>
-              <option value="กล่อง">กล่อง</option>
-              <option value="แท่ง">แท่ง</option>
-              <option value="เส้น">เส้น</option>
-            </select>
-          </td>
+          <td><input type="text" name="unit[]" class="form-control unit" readonly></td>
           <td><input type="number" step="0.01" name="purchase_price[]" class="form-control text-end" required></td>
           <td><input type="number" name="quantity[]" class="form-control text-center" min="1" required></td>
           <td><input type="text" class="form-control text-end row-total" readonly></td>
@@ -259,11 +246,24 @@ document.getElementById('btnAdd').addEventListener('click',()=>{
   row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]').forEach(input => {
       input.addEventListener('input', () => updateRowAndTotals(row));
   });
+
+  // เพิ่ม event listener ให้กับแถวใหม่ (เรียก updateTotals แทน)
+  row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]').forEach(input => {
+      input.addEventListener('input', () => updateRowAndTotals(row));
+  });
     // เรียกใช้งานฟังก์ชัน updateTotals หลังจากเพิ่มแถวใหม่
     updateTotals();
 });
 
 document.querySelectorAll('.btn-remove').forEach(b=>b.addEventListener('click',()=>b.closest('tr').remove()));
+
+// ฟังก์ชันอัปเดต ราคารวม ของแต่ละแถว และ ราคารวมทั้งหมด
+function updateRowAndTotals(row) {
+    calculateTotal(row); // คำนวณราคารวมของแถว
+    updateTotals(); // อัปเดตผลรวมทั้งหมด
+}
+
+
 
 // ฟังก์ชันคำนวณราคารวม
 function calculateTotal(row) {
@@ -305,6 +305,7 @@ function addRowListeners(row) {
 // เพิ่ม listeners ให้กับแถวที่มีอยู่แล้ว
 document.querySelectorAll('#itemBody tr').forEach(addRowListeners);
 
+updateTotals(); // เรียกใช้ฟังก์ชัน updateTotals เพื่อคำนวณผลรวมเริ่มต้น
 
 </script>
 </body>

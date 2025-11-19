@@ -39,14 +39,14 @@ $result = $conn->query($sql);
           <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
          <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
-          <li class="nav-item"><a class="nav-link" href="logout.php">ออกจากระบบ</a></li>
+          <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
 <div class="container mt-4">
-    <h2 class="fw-bold mb-4">🚚 เพิ่มบิลขายสินค้า</h2>
+    <h2 class="fw-bold mb-4">เพิ่มบิลขายสินค้า</h2>
     <form action="stock_out_save.php" method="POST" id="sale-form">
 
         <div class="mb-3 col-md-4">
