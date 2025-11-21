@@ -43,6 +43,12 @@ $result_detail = $stmt2->get_result();
     <meta charset="UTF-8">
     <title>รายละเอียดบิลขาย</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+    .product-name-col {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -85,7 +91,7 @@ $result_detail = $stmt2->get_result();
             <th>ชื่อสินค้า</th>
             <th>จำนวน</th>
             <th>หน่วย</th>
-            <th>ราคาขาย</th>
+            <th>ราคาขายต่อหน่วย</th>
             <th>รวม</th>
           </tr>
         </thead>
@@ -96,7 +102,7 @@ $result_detail = $stmt2->get_result();
             $sum = $row['quantity'] * $row['sale_price'];
             $total += $sum;
             echo "<tr>
-                    <td>{$row['product_name']}</td>
+                    <td class='product-name-col'>" . htmlspecialchars($row['product_name']) . "</td>
                     <td>{$row['quantity']}</td>
                     <td>{$row['unit']}</td>
                     <td>" . number_format($row['sale_price'], 2) . "</td>

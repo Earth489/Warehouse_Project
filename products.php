@@ -60,7 +60,7 @@ $result = $conn->query($sql);
   </nav>
 
 
-<div class="container-sm mt-4 position-relative">
+<div class="container-fluid mt-4 position-relative">
   <h2>สินค้า</h2>
 
   <!-- ปุ่ม + เพิ่มสินค้าใหม่ -->
@@ -70,7 +70,7 @@ $result = $conn->query($sql);
 
 </div>
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
   <table class="table table-bordered table-striped">
     <thead class="table-dark">
       <tr>
@@ -79,9 +79,8 @@ $result = $conn->query($sql);
         <th>ประเภทสินค้า</th>
         <th>ซัพพลายเออร์</th>
         <th>หน่วยนับ</th>
-        <th>ราคา (บาท)</th>
+        <th>ราคาขายต่อหน่วย(บาท)</th>
         <th>จำนวนคงเหลือ</th> <!-- ✅ เพิ่ม -->
-        <th>ระดับแจ้งเตือน</th>
         <th>รูปสินค้า</th>
         <th>การจัดการ</th>
       </tr>
@@ -98,7 +97,6 @@ $result = $conn->query($sql);
                       <td>{$row['unit']}</td>
                       <td>{$row['selling_price']}</td>
                       <td>{$row['stock_qty']}</td> <!-- ✅ แสดงจำนวน -->
-                      <td>{$row['reorder_level']}</td>
                       <td>";
               if (!empty($row['image_path'])) {
                   echo "<img src='{$row['image_path']}' alt='{$row['product_name']}' width='60'>";
@@ -106,16 +104,18 @@ $result = $conn->query($sql);
                   echo "<span class='text-muted'>ไม่มีรูป</span>";
               }
               echo "</td>
-                        <td class='text-center align-middle'>
-                            <a href='product_edit.php?id={$row['product_id']}' class='btn btn-warning btn-sm me-2'>แก้ไข</a>
-                            <a href='product_delete.php?id={$row['product_id']}' 
-                            onclick=\"return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?');\" 
-                            class='btn btn-danger btn-sm'>ลบ</a>
+                        <td class='align-middle'>
+                            <div class='d-flex justify-content-center gap-2'>
+                                <a href='product_edit.php?id={$row['product_id']}' class='btn btn-warning btn-sm'>แก้ไข</a>
+                                <a href='product_delete.php?id={$row['product_id']}' 
+                                onclick=\"return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบสินค้านี้?');\" 
+                                class='btn btn-danger btn-sm'>ลบ</a>
+                            </div>
                         </td>
                     </tr>";
           }
       } else {
-          echo "<tr><td colspan='11' class='text-center text-muted'>ไม่มีสินค้าในระบบ</td></tr>";
+          echo "<tr><td colspan='9' class='text-center text-muted'>ไม่มีสินค้าในระบบ</td></tr>";
       }
       ?>
     </tbody>

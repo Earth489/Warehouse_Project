@@ -8,28 +8,26 @@ if (!isset($_SESSION['user_id'])) {
     exit();  
 }
 
-//สินค้าขายดีประจำเดือนล่าสุด
+// ดึงข้อมูลสรุปสำหรับหน้าแรก
+// จำนวนสินค้าทั้งหมด
+$total_products = $conn->query("SELECT COUNT(*) AS count FROM products")->fetch_assoc()['count'];
 
-// หาวันที่เดือนล่าสุดที่มีการขาย
-$latest_month = $conn->query("
-  SELECT DATE_FORMAT(MAX(sale_date), '%Y-%m') AS latest_month 
-  FROM sales
-")->fetch_assoc()['latest_month'];
+// จำนวนประเภทสินค้าทั้งหมด
+$total_categories = $conn->query("SELECT COUNT(*) AS count FROM categories")->fetch_assoc()['count'];
 
-$topProducts = [];
-if ($latest_month) {
-    $sql = "
-        SELECT p.product_name, SUM(sd.quantity) AS total_sold
-        FROM sale_details sd
-        JOIN sales s ON sd.sale_id = s.sale_id
-        JOIN products p ON sd.product_id = p.product_id
-        WHERE DATE_FORMAT(s.sale_date, '%Y-%m') = '$latest_month'
-        GROUP BY sd.product_id
-        ORDER BY total_sold DESC
-        LIMIT 4
-    ";
-    $topProducts = $conn->query($sql);
-}
+// จำนวนซัพพลายเออร์ทั้งหมด
+$total_suppliers = $conn->query("SELECT COUNT(*) AS count FROM suppliers")->fetch_assoc()['count'];
+
+// ยอดขายรวมของเดือนปัจจุบัน
+$current_month_sales = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM sales WHERE DATE_FORMAT(sale_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
+
+// ยอดซื้อรวมของเดือนปัจจุบัน
+$current_month_purchases = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM purchases WHERE DATE_FORMAT(purchase_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
+
+// เดือนปัจจุบันสำหรับแสดงผล
+$current_month_thai = date('m/Y');
+
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -37,6 +35,7 @@ if ($latest_month) {
   <meta charset="UTF-8">
   <title>ระบบจัดการคลังสินค้า - ร้านวัสดุก่อสร้าง</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  
 </head>
 <body>
 
@@ -66,39 +65,61 @@ if ($latest_month) {
   <div class="container my-5">
     <h1 class="mb-4">ระบบจัดการคลังสินค้า</h1>
 
-    <div class="row text-center">
-  <h3 class="mb-4">สินค้าขายดีประจำเดือน 
-    <?php echo $latest_month ? date("m/Y", strtotime($latest_month . "-01")) : ""; ?>
-  </h3>
-
-  <?php if ($topProducts && $topProducts->num_rows > 0): ?>
-    <?php 
-      $colors = ['success', 'success', 'success', 'success'];
-      $i = 0;
-      while ($row = $topProducts->fetch_assoc()): 
-    ?>
-      <div class="col-md-3">
-        <div class="card bg-<?php echo $colors[$i % 4]; ?> text-white mb-3">
+    <!-- ส่วนสรุปข้อมูล (Summary Cards) -->
+    <div class="row mb-5">
+      <div class="col-md-4 mb-3">
+        <div class="card bg-dark text-white shadow-sm">
           <div class="card-body">
-            <h4><?php echo number_format($row['total_sold']); ?></h4>
-            <p><?php echo htmlspecialchars($row['product_name']); ?></p>
+            <h5 class="card-title">สินค้าทั้งหมด</h5>
+            <p class="card-text fs-3"><?= number_format($total_products) ?> รายการ</p>
+            <a href="products.php" class="text-white text-decoration-none">ดูรายละเอียด &raquo;</a>
           </div>
         </div>
       </div>
-    <?php $i++; endwhile; ?>
-  <?php else: ?>
-    <div class="text-center text-muted mt-3">
-      <p>ไม่มีข้อมูลการขายในเดือนล่าสุด</p>
+      <div class="col-md-4 mb-3">
+        <div class="card bg-dark text-white shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">ประเภทสินค้าทั้งหมด</h5>
+            <p class="card-text fs-3"><?= number_format($total_categories) ?> ประเภท</p>
+            <a href="categories.php" class="text-white text-decoration-none">ดูรายละเอียด &raquo;</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card bg-dark text-white shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">ซัพพลายเออร์ทั้งหมด</h5>
+            <p class="card-text fs-3"><?= number_format($total_suppliers) ?> ราย</p>
+            <a href="suppliers.php" class="text-white text-decoration-none">ดูรายละเอียด &raquo;</a>
+          </div>
+        </div>
+      </div>
     </div>
-  <?php endif; ?>
-</div>
+
+    <div class="row mb-5">
+      <div class="col-md-6 mb-3">
+        <div class="card bg-success text-white shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">ยอดขายรวมเดือน <?= $current_month_thai ?></h5>
+            <p class="card-text fs-3"><?= number_format($current_month_sales, 2) ?> บาท</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <div class="card bg-danger text-white shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">ยอดซื้อรวมเดือน <?= $current_month_thai ?></h5>
+            <p class="card-text fs-3"><?= number_format($current_month_purchases, 2) ?> บาท</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- ตารางสินค้าใกล้หมด -->
-    <h3 class="mt-5">สินค้าใกล้หมด</h3>
+    <h3 class="mt-4">สินค้าใกล้หมด</h3>
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>รหัสสินค้า</th>
           <th>ชื่อสินค้า</th>
           <th>จำนวนคงเหลือ</th>
           <th>ซัพพลายเออร์</th>
@@ -119,15 +140,14 @@ if ($latest_month) {
 
       if ($result->num_rows > 0) {
           while ($row = $result->fetch_assoc()) {
-              echo "<tr>
-                      <td>{$row['product_id']}</td>
+              echo "<tr>                      
                       <td>{$row['product_name']}</td>
                       <td>{$row['stock_qty']}</td>
                       <td>{$row['supplier_name']}</td>
                     </tr>";
           }
       } else {
-          echo "<tr><td colspan='4' class='text-center text-muted'>ไม่มีสินค้าใกล้หมด</td></tr>";
+          echo "<tr><td colspan='3' class='text-center text-muted'>ไม่มีสินค้าใกล้หมด</td></tr>";
       }
         ?>
       </tbody>

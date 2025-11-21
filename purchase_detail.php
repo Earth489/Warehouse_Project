@@ -29,7 +29,7 @@ $headerResult = $stmt->get_result();
 $purchase = $headerResult->fetch_assoc();
 
 // ดึงรายละเอียดสินค้าในบิล
-$sqlItems = "SELECT d.product_id, pr.product_name, d.quantity, d.purchase_price, 
+$sqlItems = "SELECT d.product_id, pr.product_name, pr.unit, d.quantity, d.purchase_price, 
                     (d.quantity * d.purchase_price) AS total
              FROM purchase_details d
              LEFT JOIN products pr ON d.product_id = pr.product_id
@@ -52,6 +52,12 @@ body {
 .card {
   border-radius: 15px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.product-name-col {
+  max-width: 300px; /* กำหนดความกว้างสูงสุด */
+  word-wrap: break-word; /* สำหรับเบราว์เซอร์เก่า */
+  overflow-wrap: break-word; /* มาตรฐานใหม่ */
+  white-space: normal !important; /* ทำให้ข้อความตัดขึ้นบรรทัดใหม่ได้ */
 }
 </style>
 </head>
@@ -98,9 +104,9 @@ body {
         <table class="table table-bordered mt-3">
           <thead class="table-light">
             <tr>
-              <th>รหัสสินค้า</th>
               <th>ชื่อสินค้า</th>
               <th>จำนวน</th>
+              <th>หน่วยนับ</th>
               <th>ราคาต่อหน่วย</th>
               <th>ราคารวม</th>
             </tr>
@@ -109,9 +115,9 @@ body {
             <?php if ($itemsResult->num_rows > 0): ?>
               <?php while ($item = $itemsResult->fetch_assoc()): ?>
                 <tr>
-                  <td><?= htmlspecialchars($item['product_id']) ?></td>
-                  <td><?= htmlspecialchars($item['product_name']) ?></td>
+                  <td class="product-name-col"><?= htmlspecialchars($item['product_name']) ?></td>
                   <td><?= number_format($item['quantity'], 0) ?></td>
+                  <td><?= htmlspecialchars($item['unit']) ?></td>
                   <td><?= number_format($item['purchase_price'], 2) ?></td>
                   <td><?= number_format($item['total'], 2) ?></td>
                 </tr>

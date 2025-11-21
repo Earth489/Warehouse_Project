@@ -30,6 +30,22 @@ if ($result->num_rows == 0) {
 
 $product = $result->fetch_assoc();
 
+// ดึงราคาซื้อล่าสุดของสินค้านี้
+$latest_purchase_price = 0; // กำหนดค่าเริ่มต้น
+$sql_purchase = "SELECT pd.purchase_price 
+                 FROM purchase_details pd
+                 JOIN purchases p ON pd.purchase_id = p.purchase_id
+                 WHERE pd.product_id = ?
+                 ORDER BY p.purchase_date DESC, p.purchase_id DESC
+                 LIMIT 1";
+$stmt_purchase = $conn->prepare($sql_purchase);
+$stmt_purchase->bind_param("i", $product_id);
+$stmt_purchase->execute();
+$result_purchase = $stmt_purchase->get_result();
+if ($row_purchase = $result_purchase->fetch_assoc()) {
+    $latest_purchase_price = $row_purchase['purchase_price'];
+}
+
 // ดึงข้อมูลประเภทสินค้าและซัพพลายเออร์
 $categories = $conn->query("SELECT * FROM categories");
 $suppliers = $conn->query("SELECT * FROM suppliers");
@@ -39,9 +55,15 @@ if (isset($_POST['update'])) {
     $name = $_POST['product_name'];
     $category_id = $_POST['category_id'];
     $unit = $_POST['unit'];
-    $price = $_POST['selling_price'];
+    $price = (float)$_POST['selling_price'];
     $reorder = $_POST['reorder_level'];
     $stock = $_POST['stock_qty'];
+
+    // Server-side validation: ตรวจสอบว่าราคาขายไม่ต่ำกว่าราคาซื้อล่าสุด
+    if ($price < $latest_purchase_price) {
+        echo "<script>alert('ข้อผิดพลาด: ราคาขายต้องไม่ต่ำกว่าราคาซื้อล่าสุด (" . number_format($latest_purchase_price, 2) . " บาท)'); window.history.back();</script>";
+        exit();
+    }
 
     // จัดการรูปภาพ (ถ้ามีอัปโหลดใหม่)
     $image_path = $product['image_path'];
@@ -101,7 +123,7 @@ if (isset($_POST['update'])) {
     <form method="POST" enctype="multipart/form-data">
         <div class="mb-3">
             <label>ชื่อสินค้า</label>
-            <input type="text" name="product_name" class="form-control" value="<?= $product['product_name'] ?>" required>
+            <textarea name="product_name" class="form-control" rows="3" required><?= htmlspecialchars($product['product_name']) ?></textarea>
         </div>
 
         <div class="mb-3">
@@ -122,7 +144,10 @@ if (isset($_POST['update'])) {
             </div>
             <div class="col-md-4 mb-3">
                 <label>ราคา</label>
-                <input type="number" step="0.01" name="selling_price" class="form-control" value="<?= $product['selling_price'] ?>">
+                <input type="number" step="0.01" id="selling_price" name="selling_price" class="form-control" value="<?= $product['selling_price'] ?>">
+                <div id="price-warning" class="form-text text-danger" style="display: none;">
+                    ราคาขายต้องไม่ต่ำกว่าราคาซื้อล่าสุด: <?= number_format($latest_purchase_price, 2) ?> บาท
+                </div>
             </div>
             <div class="col-md-4 mb-3">
                 <label>ระดับแจ้งเตือน (reorder)</label>
@@ -143,10 +168,33 @@ if (isset($_POST['update'])) {
             <input type="file" name="image" class="form-control">
         </div>
 
-        <button type="submit" name="update" class="btn btn-success">บันทึกการแก้ไข</button>
+        <button type="submit" name="update" id="update-btn" class="btn btn-success">บันทึกการแก้ไข</button>
         <a href="products.php" class="btn btn-secondary">ยกเลิก</a>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sellingPriceInput = document.getElementById('selling_price');
+    const priceWarning = document.getElementById('price-warning');
+    const updateBtn = document.getElementById('update-btn');
+    const latestPurchasePrice = <?= $latest_purchase_price ?>;
+
+    function validatePrice() {
+        const sellingPrice = parseFloat(sellingPriceInput.value);
+        if (sellingPrice < latestPurchasePrice) {
+            priceWarning.style.display = 'block';
+            updateBtn.disabled = true;
+        } else {
+            priceWarning.style.display = 'none';
+            updateBtn.disabled = false;
+        }
+    }
+
+    sellingPriceInput.addEventListener('input', validatePrice);
+    validatePrice(); // ตรวจสอบราคาเมื่อโหลดหน้าเว็บครั้งแรก
+});
+</script>
 
 </body>
 </html>
