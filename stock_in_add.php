@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 $uid = $_SESSION['user_id'];
 
 // ดึงสินค้า
-$sqlProducts = "SELECT p.product_id, p.product_name, p.unit, p.selling_price,
+$sqlProducts = "SELECT p.product_id, p.product_name, p.base_unit, p.sub_unit, p.unit_conversion_rate,
                        IFNULL(c.category_name,'-') AS category_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.category_id
@@ -65,27 +65,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $getProdSupplier = $conn->prepare("SELECT supplier_id, product_name FROM products WHERE product_id = ?");
             
             // เตรียม PreparedStatement สำหรับอัปเดต stock_qty และ supplier_id
-            $updStockAndSupplier = $conn->prepare("UPDATE products SET stock_qty = stock_qty + ?, supplier_id = ? WHERE product_id = ?");
+            $updStockAndSupplier = $conn->prepare("UPDATE products SET stock_in_sub_unit = stock_in_sub_unit + ?, supplier_id = ? WHERE product_id = ?");
             
             // เตรียม PreparedStatement สำหรับอัปเดต stock_qty เท่านั้น
-            $updStockOnly = $conn->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE product_id = ?");
+            $updStockOnly = $conn->prepare("UPDATE products SET stock_in_sub_unit = stock_in_sub_unit + ? WHERE product_id = ?");
 
             foreach ($items as $it) {
-                // 1. ดึงข้อมูล supplier_id ปัจจุบันและชื่อสินค้า
-                $getProdSupplier->bind_param("i", $it['product_id']);
-                $getProdSupplier->execute();
-                $prodData = $getProdSupplier->get_result()->fetch_assoc();
-                $current_product_supplier_id = $prodData['supplier_id'];
-                $product_name_for_error = $prodData['product_name'];
+                // 1. ดึงข้อมูลสินค้าเพื่อคำนวณสต็อก
+                $prod_info_stmt = $conn->prepare("SELECT unit_conversion_rate, supplier_id FROM products WHERE product_id = ?");
+                $prod_info_stmt->bind_param("i", $it['product_id']);
+                $prod_info_stmt->execute();
+                $prod_info = $prod_info_stmt->get_result()->fetch_assoc();
+                $conv_rate = $prod_info['unit_conversion_rate'];
+                $current_product_supplier_id = $prod_info['supplier_id'];
 
-                // 2. ตรวจสอบเงื่อนไข supplier_id และอัปเดตสต็อก
+                // คำนวณจำนวนที่จะเพิ่มในหน่วยย่อย
+                $qty_to_add_in_sub_unit = $it['qty'] * $conv_rate;
+
                 if ($current_product_supplier_id === NULL) {
-                    // กรณีที่ 1: สินค้ายังไม่มี supplier_id ให้บันทึก supplier_id ใหม่
-                    $updStockAndSupplier->bind_param("iii", $it['qty'], $supplier_id, $it['product_id']);
+                    $updStockAndSupplier->bind_param("dii", $qty_to_add_in_sub_unit, $supplier_id, $it['product_id']);
                     $updStockAndSupplier->execute();
                 } elseif ($current_product_supplier_id == $supplier_id) {
-                    // กรณีที่ 2a: สินค้ามี supplier_id อยู่แล้วและตรงกับที่เลือก ให้เพิ่มสต็อกเท่านั้น
-                    $updStockOnly->bind_param("ii", $it['qty'], $it['product_id']);
+                    $updStockOnly->bind_param("di", $qty_to_add_in_sub_unit, $it['product_id']);
                     $updStockOnly->execute();
                 } else {
                     // กรณีที่ 2b: สินค้ามี supplier_id อยู่แล้วแต่ไม่ตรงกับที่เลือก ให้ยกเลิกและแจ้งเตือน
@@ -98,8 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $insDet->close();
             $getProdSupplier->close();
-            $updStockAndSupplier->close();
-            $updStockOnly->close();
             $conn->commit();
 
             header("Location: warehouse_page.php?msg=stockin_ok");
@@ -175,9 +174,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <tr>
           <th>สินค้า</th>
           <th>ประเภท</th>
-          <th>หน่วย</th>
-          <th>ราคาซื้อ (บาท)</th>
-          <th>จำนวน</th>
+          <th>หน่วยที่รับ (หน่วยหลัก)</th>
+          <th>ราคาซื้อ (ต่อหน่วยหลัก)</th>
+          <th>จำนวน (หน่วยหลัก)</th>
           <th>ราคารวม</th>
           <th></th>
         </tr>
@@ -190,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <?php foreach($products as $p): ?>
                 <option value="<?=$p['product_id']?>"
                         data-cat="<?=$p['category_name']?>"
-                        data-unit="<?=$p['unit']?>">
+                        data-unit="<?=htmlspecialchars($p['base_unit'])?>">
                   <?=$p['product_name']?>
                 </option>
               <?php endforeach; ?>

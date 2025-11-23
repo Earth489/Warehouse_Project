@@ -7,9 +7,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // ดึงรายการสินค้าในสต็อก
-$sql = "SELECT product_id, product_name, unit, selling_price, stock_qty 
+$sql = "SELECT product_id, product_name, selling_price, 
+               stock_in_sub_unit, base_unit, sub_unit, unit_conversion_rate
         FROM products 
-        WHERE stock_qty > 0
+        WHERE stock_in_sub_unit > 0
         ORDER BY product_name ASC";
 $result = $conn->query($sql);
 ?>
@@ -58,10 +59,10 @@ $result = $conn->query($sql);
             <thead class="table-dark text-center">
                 <tr>
                     <th>สินค้า</th>
-                    <th>หน่วย</th>
+                    <th style="width: 15%;">หน่วยที่ขาย</th>
                     <th>ราคาขาย</th>
                     <th>จำนวนคงเหลือ</th>
-                    <th>จำนวนที่ขาย</th>
+                    <th style="width: 12%;">จำนวนที่ขาย</th>
                     <th>ราคารวม</th>
                     <th></th>
                 </tr>
@@ -73,16 +74,20 @@ $result = $conn->query($sql);
                             <option value="">-- เลือกสินค้า --</option>
                             <?php mysqli_data_seek($result, 0); ?>
                             <?php while ($p = $result->fetch_assoc()): ?>
-                                <option value="<?= $p['product_id'] ?>"
-                                        data-unit="<?= htmlspecialchars($p['unit']) ?>"
-                                        data-price="<?= $p['selling_price'] ?>"
-                                        data-stock="<?= $p['stock_qty'] ?>">
+                                <option value="<?= $p['product_id'] ?>" 
+                                        data-price="<?= $p['selling_price'] ?>" 
+                                        data-stock-sub-unit="<?= $p['stock_in_sub_unit'] ?>"
+                                        data-base-unit="<?= htmlspecialchars($p['base_unit']) ?>"
+                                        data-sub-unit="<?= htmlspecialchars($p['sub_unit']) ?>"
+                                        data-conv-rate="<?= $p['unit_conversion_rate'] ?>">
                                     <?= htmlspecialchars($p['product_name']) ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>
                     </td>
-                    <td><input type="text" class="form-control unit" readonly></td>
+                    <td>
+                        <select name="sale_unit[]" class="form-select sale-unit" required></select>
+                    </td>
                     <td><input type="text" class="form-control price text-end" readonly></td>
                     <td><input type="text" class="form-control stock text-center" readonly></td>
                     <td><input type="number" name="quantity[]" class="form-control quantity text-center" min="1" required></td>
@@ -105,17 +110,38 @@ $result = $conn->query($sql);
 <script>
 function addRowListeners(row) {
     const productSelect = row.querySelector('.product-select');
+    const unitSelect = row.querySelector('.sale-unit');
     const quantityInput = row.querySelector('.quantity');
     const removeBtn = row.querySelector('.btn-remove');
 
     productSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         const tr = this.closest('tr');
-        tr.querySelector('.unit').value = selectedOption.dataset.unit || '';
-        tr.querySelector('.price').value = parseFloat(selectedOption.dataset.price || 0).toFixed(2);
-        tr.querySelector('.stock').value = selectedOption.dataset.stock || '';
-        quantityInput.max = selectedOption.dataset.stock || 1; // ตั้งค่า max ของจำนวนที่ขาย
-        updateTotals();
+        
+        const price = parseFloat(selectedOption.dataset.price || 0);
+        const stockSubUnit = parseFloat(selectedOption.dataset.stockSubUnit || 0);
+        const baseUnit = selectedOption.dataset.baseUnit;
+        const subUnit = selectedOption.dataset.subUnit;
+        const convRate = parseFloat(selectedOption.dataset.convRate || 1);
+
+        tr.querySelector('.price').value = price.toFixed(2);
+
+        // สร้างตัวเลือกหน่วยขาย
+        unitSelect.innerHTML = '';
+        if (convRate > 1 && subUnit) {
+            // มี 2 หน่วย
+            unitSelect.add(new Option(baseUnit, baseUnit));
+            unitSelect.add(new Option(subUnit, subUnit));
+        } else {
+            // มีหน่วยเดียว
+            unitSelect.add(new Option(baseUnit, baseUnit));
+        }
+        
+        updateStockDisplay(tr);
+    });
+
+    unitSelect.addEventListener('change', function() {
+        updateStockDisplay(this.closest('tr'));
     });
 
     quantityInput.addEventListener('input', updateTotals);
@@ -126,12 +152,39 @@ function addRowListeners(row) {
     });
 }
 
+function updateStockDisplay(tr) {
+    const selectedOption = tr.querySelector('.product-select').options[tr.querySelector('.product-select').selectedIndex];
+    const stockSubUnit = parseFloat(selectedOption.dataset.stockSubUnit || 0);
+    const baseUnit = selectedOption.dataset.baseUnit;
+    const subUnit = selectedOption.dataset.subUnit;
+    const convRate = parseFloat(selectedOption.dataset.convRate || 1);
+    
+    let stockDisplay = '';
+    if (convRate > 1 && subUnit) {
+        const baseUnitStock = Math.floor(stockSubUnit / convRate);
+        const subUnitStock = stockSubUnit % convRate;
+        stockDisplay = `${baseUnitStock} ${baseUnit} / ${subUnitStock.toFixed(2)} ${subUnit}`;
+    } else {
+        stockDisplay = `${stockSubUnit} ${baseUnit}`;
+    }
+    tr.querySelector('.stock').value = stockDisplay;
+}
+
 function updateTotals() {
     let totalAmount = 0;
     document.querySelectorAll('#itemBody tr').forEach(row => {
         const price = parseFloat(row.querySelector('.price').value) || 0;
         const quantity = parseInt(row.querySelector('.quantity').value) || 0;
-        const rowTotal = price * quantity;
+        const selectedUnit = row.querySelector('.sale-unit').value;
+        
+        const selectedOption = row.querySelector('.product-select').options[row.querySelector('.product-select').selectedIndex];
+        const baseUnit = selectedOption.dataset.baseUnit;
+        const convRate = parseFloat(selectedOption.dataset.convRate || 1);
+
+        // คำนวณราคารวมตามหน่วยที่ขาย
+        let multiplier = (selectedUnit === baseUnit && convRate > 1) ? convRate : 1;
+        const rowTotal = price * quantity * multiplier;
+
         row.querySelector('.row-total').value = rowTotal.toFixed(2);
         totalAmount += rowTotal;
     });

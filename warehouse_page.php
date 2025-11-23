@@ -78,13 +78,17 @@ $result = $stmt->get_result();
 // ✅ แยกข้อมูลที่ได้จากการค้นหา (หรือข้อมูลทั้งหมด) ไปยังตัวแปรสำหรับแต่ละแท็บ
 $bills_in = [];
 $bills_out = [];
+$total_in = 0;
+$total_out = 0;
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         if ($row['type'] == 'บิลซื้อ (Purchase)') {
             $bills_in[] = $row;
+            $total_in += $row['total_amount'];
         } else {
             $bills_out[] = $row;
+            $total_out += $row['total_amount'];
         }
     }
 }
@@ -214,6 +218,13 @@ body { background-color: #f8f9fa; }
                     </tr>
                 <?php endif; ?>
             </tbody>
+            <tfoot>
+                <tr class="table-light">
+                    <th colspan="3" class="text-end">ยอดรวมบิลรับเข้าที่แสดง:</th>
+                    <th class="text-end"><?= number_format($total_in, 2) ?></th>
+                    <th></th>
+                </tr>
+            </tfoot>
         </table>
     </div>
 
@@ -248,6 +259,13 @@ body { background-color: #f8f9fa; }
                     </tr>
                 <?php endif; ?>
             </tbody>
+            <tfoot>
+                <tr class="table-light">
+                    <th colspan="2" class="text-end">ยอดรวมบิลขายออกที่แสดง:</th>
+                    <th class="text-end"><?= number_format($total_out, 2) ?></th>
+                    <th></th>
+                </tr>
+            </tfoot>
         </table>
             </div>
   </div>

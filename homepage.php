@@ -8,16 +8,6 @@ if (!isset($_SESSION['user_id'])) {
     exit();  
 }
 
-// ดึงข้อมูลสรุปสำหรับหน้าแรก
-// จำนวนสินค้าทั้งหมด
-$total_products = $conn->query("SELECT COUNT(*) AS count FROM products")->fetch_assoc()['count'];
-
-// จำนวนประเภทสินค้าทั้งหมด
-$total_categories = $conn->query("SELECT COUNT(*) AS count FROM categories")->fetch_assoc()['count'];
-
-// จำนวนซัพพลายเออร์ทั้งหมด
-$total_suppliers = $conn->query("SELECT COUNT(*) AS count FROM suppliers")->fetch_assoc()['count'];
-
 // ยอดขายรวมของเดือนปัจจุบัน
 $current_month_sales = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM sales WHERE DATE_FORMAT(sale_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
 
@@ -65,37 +55,6 @@ $current_month_thai = date('m/Y');
   <div class="container my-5">
     <h1 class="mb-4">ระบบจัดการคลังสินค้า</h1>
 
-    <!-- ส่วนสรุปข้อมูล (Summary Cards) -->
-    <div class="row mb-5">
-      <div class="col-md-4 mb-3">
-        <div class="card bg-dark text-white shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">สินค้าทั้งหมด</h5>
-            <p class="card-text fs-3"><?= number_format($total_products) ?> รายการ</p>
-            <a href="products.php" class="text-white text-decoration-none">ดูรายละเอียด &raquo;</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 mb-3">
-        <div class="card bg-dark text-white shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">ประเภทสินค้าทั้งหมด</h5>
-            <p class="card-text fs-3"><?= number_format($total_categories) ?> ประเภท</p>
-            <a href="categories.php" class="text-white text-decoration-none">ดูรายละเอียด &raquo;</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 mb-3">
-        <div class="card bg-dark text-white shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">ซัพพลายเออร์ทั้งหมด</h5>
-            <p class="card-text fs-3"><?= number_format($total_suppliers) ?> ราย</p>
-            <a href="suppliers.php" class="text-white text-decoration-none">ดูรายละเอียด &raquo;</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="row mb-5">
       <div class="col-md-6 mb-3">
         <div class="card bg-success text-white shadow-sm">
@@ -127,22 +86,39 @@ $current_month_thai = date('m/Y');
       </thead>
       <tbody>
         <?php
-      $sql = "
-        SELECT p.product_id, p.product_name, p.stock_qty, 
-              s.supplier_name
-        FROM products p
-        LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-        WHERE p.stock_qty <= p.reorder_level
-        ORDER BY p.stock_qty ASC
-      ";
+      // สมมติว่าตาราง products มีคอลัมน์ตามที่แนะนำไปแล้ว
+      // stock_in_sub_unit, base_unit, sub_unit, unit_conversion_rate
+      $sql = "SELECT 
+                p.product_id, 
+                p.product_name, 
+                p.stock_in_sub_unit, 
+                p.reorder_level,
+                p.base_unit,
+                p.sub_unit,
+                p.unit_conversion_rate,
+                s.supplier_name
+              FROM products p -- เปลี่ยนจาก LEFT JOIN เป็น INNER JOIN
+              INNER JOIN suppliers s ON p.supplier_id = s.supplier_id
+              WHERE p.stock_in_sub_unit <= p.reorder_level AND p.supplier_id IS NOT NULL
+              ORDER BY p.stock_in_sub_unit ASC";
 
       $result = $conn->query($sql);
 
       if ($result->num_rows > 0) {
           while ($row = $result->fetch_assoc()) {
+              $displayStock = '';
+              // แปลงสต็อกเป็นหน่วยที่เข้าใจง่าย
+              if ($row['unit_conversion_rate'] && $row['unit_conversion_rate'] > 1) {
+                  $baseUnitStock = floor($row['stock_in_sub_unit'] / $row['unit_conversion_rate']);
+                  $subUnitStock = fmod($row['stock_in_sub_unit'], $row['unit_conversion_rate']);
+                  $displayStock = "{$baseUnitStock} {$row['base_unit']} / {$subUnitStock} {$row['sub_unit']}";
+              } else {
+                  $displayStock = "{$row['stock_in_sub_unit']} {$row['base_unit']}";
+              }
+
               echo "<tr>                      
                       <td>{$row['product_name']}</td>
-                      <td>{$row['stock_qty']}</td>
+                      <td>{$displayStock}</td>
                       <td>{$row['supplier_name']}</td>
                     </tr>";
           }

@@ -12,10 +12,13 @@ if (!isset($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_name   = $_POST['product_name'];
     $category_id    = $_POST['category_id'];
-    $unit           = $_POST['unit'];
     $selling_price  = $_POST['selling_price'];
     $reorder_level  = $_POST['reorder_level'];
-
+    // รับค่าใหม่สำหรับหน่วย
+    $base_unit = $_POST['base_unit'];
+    $sub_unit = !empty($_POST['sub_unit']) ? $_POST['sub_unit'] : null;
+    $unit_conversion_rate = $_POST['unit_conversion_rate'];
+    
     // อัพโหลดรูป
     $image_path = null;
     if (!empty($_FILES['image']['name'])) {
@@ -31,12 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // ✅ บันทึกลง DB (ไม่ต้องใช้ supplier_id)
+    // บันทึกลง DB ด้วยคอลัมน์ใหม่
     $stmt = $conn->prepare("INSERT INTO products 
-        (product_name, category_id, unit, selling_price, reorder_level, image_path) 
-        VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sisdss", 
-        $product_name, $category_id, $unit, $selling_price, $reorder_level, $image_path
+        (product_name, category_id, selling_price, reorder_level, image_path, base_unit, sub_unit, unit_conversion_rate) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sidssssd", 
+        $product_name, $category_id, $selling_price, $reorder_level, $image_path, $base_unit, $sub_unit, $unit_conversion_rate
     );
 
     if ($stmt->execute()) {
@@ -101,30 +104,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </select>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">หน่วยนับ</label>
-      <select name="unit" class="form-select" required>
-        <option value="">-- เลือกหน่วยนับ --</option>
-        <option value="ถุง">ถุง</option>
-        <option value="หลอด">หลอด</option>
-        <option value="อัน">อัน</option>
-        <option value="กระป๋อง">กระป๋อง</option>
-        <option value="ใบ">ใบ</option>
-        <option value="ถัง">ถัง</option>
-        <option value="กล่อง">กล่อง</option>
-        <option value="แท่ง">แท่ง</option>
-        <option value="เส้น">เส้น</option>
-      </select>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label for="base_unit" class="form-label">หน่วยหลัก (เช่น กระสอบ, กล่อง)</label>
+        <input type="text" class="form-control" id="base_unit" name="base_unit" required>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label for="sub_unit" class="form-label">หน่วยย่อย (ถ้ามี เช่น กก., ชิ้น)</label>
+        <input type="text" class="form-control" id="sub_unit" name="sub_unit">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label for="unit_conversion_rate" class="form-label">อัตราแปลง (1 หน่วยหลัก = ? หน่วยย่อย)</label>
+        <input type="number" class="form-control" id="unit_conversion_rate" name="unit_conversion_rate" value="1" step="0.01" required>
+        <div class="form-text">ถ้าไม่มีหน่วยย่อย ให้ใส่ 1</div>
+      </div>
     </div>
 
     <div class="mb-3">
-      <label class="form-label">ราคาขาย (บาท)</label>
+      <label class="form-label">ราคาขาย (ต่อหน่วยย่อย)</label>
       <input type="number" step="0.01" name="selling_price" class="form-control" required>
+      <div class="form-text">เช่น ราคาขายต่อ 1 กิโลกรัม หรือราคาขายต่อ 1 ชิ้น</div>
     </div>
 
     <div class="mb-3">
-      <label class="form-label">จุดสั่งซื้อใหม่ (Reorder Level)</label>
+      <label class="form-label">จุดสั่งซื้อใหม่ (ในหน่วยย่อย)</label>
       <input type="number" name="reorder_level" class="form-control" required>
+      <div class="form-text">เช่น ถ้าต้องการให้แจ้งเตือนเมื่อปูนเหลือน้อยกว่า 2 กระสอบ (กระสอบละ 20 กก.) ให้กรอก 40</div>
     </div>
 
     <div class="mb-3">

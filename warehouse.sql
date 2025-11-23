@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 21, 2025 at 10:07 AM
+-- Generation Time: Nov 23, 2025 at 04:04 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -53,10 +53,12 @@ CREATE TABLE `products` (
   `product_name` varchar(150) NOT NULL,
   `category_id` int(11) DEFAULT NULL,
   `supplier_id` int(11) DEFAULT NULL,
-  `unit` varchar(50) DEFAULT NULL,
-  `stock_qty` int(11) NOT NULL DEFAULT 0,
+  `base_unit` varchar(50) DEFAULT NULL COMMENT 'หน่วยหลัก (เช่น กระสอบ, กล่อง)',
+  `sub_unit` varchar(50) DEFAULT NULL COMMENT 'หน่วยย่อย (เช่น กิโลกรัม, ชิ้น)',
+  `unit_conversion_rate` decimal(10,2) NOT NULL DEFAULT 1.00 COMMENT 'อัตราแปลงจากหน่วยหลักไปหน่วยย่อย',
+  `stock_in_sub_unit` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'สต็อกคงเหลือในหน่วยย่อยที่สุด',
   `selling_price` decimal(10,2) NOT NULL,
-  `reorder_level` int(11) DEFAULT 0,
+  `reorder_level` decimal(10,2) NOT NULL DEFAULT 0.00,
   `image_path` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -64,11 +66,11 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `supplier_id`, `unit`, `stock_qty`, `selling_price`, `reorder_level`, `image_path`) VALUES
-(7, 'ปูนซีเมนต์ SCG/ตราเสือ ปูนเสือ (แบ่งขายขนาด 2 กก.) \r\nบวกลบ ไม่เกิน 1ขีด สำหรับซ่อมแซมหรือต่อเติมเล็กๆน้อยๆ\r\n', 1, 1, 'ถุง', 5, 55.00, 20, 'uploads/1759834971_ปูน.png'),
-(8, 'ทราย', 1, 4, 'ถุง', 4, 50.00, 20, 'uploads/1759834997_ทราย.jpg'),
-(9, 'หิน', 1, 1, 'ถุง', 212, 50.00, 15, 'uploads/1761633736_หิน.jpg'),
-(10, 'อิฐมวลเบา', 1, 1, 'ก้อน', 1545, 10.00, 50, 'uploads/อิฐ.jpg');
+INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `supplier_id`, `base_unit`, `sub_unit`, `unit_conversion_rate`, `stock_in_sub_unit`, `selling_price`, `reorder_level`, `image_path`) VALUES
+(7, 'ปูนซีเมนต์ SCG/ตราเสือ ปูนเสือ (แบ่งขายขนาด 2 กก.) \r\nบวกลบ ไม่เกิน 1ขีด สำหรับซ่อมแซมหรือต่อเติมเล็กๆน้อยๆ\r\n', 1, 1, 'ถุง', NULL, 1.00, 5.00, 55.00, 20.00, 'uploads/1759834971_ปูน.png'),
+(8, 'ทราย', 1, 4, 'ถุง', NULL, 1.00, 4.00, 50.00, 20.00, 'uploads/1759834997_ทราย.jpg'),
+(9, 'หิน', 1, 1, 'ถุง', NULL, 1.00, 212.00, 50.00, 15.00, 'uploads/1761633736_หิน.jpg'),
+(10, 'อิฐมวลเบา', 1, 1, 'ก้อน', NULL, 1.00, 1545.00, 10.00, 50.00, 'uploads/อิฐ.jpg');
 
 -- --------------------------------------------------------
 

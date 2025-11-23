@@ -29,7 +29,7 @@ $headerResult = $stmt->get_result();
 $purchase = $headerResult->fetch_assoc();
 
 // ดึงรายละเอียดสินค้าในบิล
-$sqlItems = "SELECT d.product_id, pr.product_name, pr.unit, d.quantity, d.purchase_price, 
+$sqlItems = "SELECT d.product_id, pr.product_name, pr.base_unit, d.quantity, d.purchase_price, 
                     (d.quantity * d.purchase_price) AS total
              FROM purchase_details d
              LEFT JOIN products pr ON d.product_id = pr.product_id
@@ -38,6 +38,23 @@ $stmt2 = $conn->prepare($sqlItems);
 $stmt2->bind_param("i", $purchase_id);
 $stmt2->execute();
 $itemsResult = $stmt2->get_result();
+
+// ✅ เพิ่ม Logic: ตรวจสอบหน่วยสินค้าในบิลเพื่อเปลี่ยนหัวตารางแบบไดนามิก
+$price_header = "ราคาซื้อต่อหน่วย"; // ค่าเริ่มต้น
+$all_items = [];
+$all_units = [];
+if ($itemsResult->num_rows > 0) {
+    while($item = $itemsResult->fetch_assoc()) {
+        $all_items[] = $item; // เก็บข้อมูลทั้งหมดไว้ใน array
+        if (!empty($item['base_unit'])) {
+            $all_units[] = $item['base_unit']; // เก็บเฉพาะหน่วย
+        }
+    }
+    $unique_units = array_unique($all_units); 
+    if (count($unique_units) === 1) {
+        $price_header = "ราคาซื้อต่อ" . htmlspecialchars(reset($unique_units));
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -58,6 +75,10 @@ body {
   word-wrap: break-word; /* สำหรับเบราว์เซอร์เก่า */
   overflow-wrap: break-word; /* มาตรฐานใหม่ */
   white-space: normal !important; /* ทำให้ข้อความตัดขึ้นบรรทัดใหม่ได้ */
+}
+@media print {
+  .no-print { display: none; }
+  .card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
 }
 </style>
 </head>
@@ -107,21 +128,21 @@ body {
               <th>ชื่อสินค้า</th>
               <th>จำนวน</th>
               <th>หน่วยนับ</th>
-              <th>ราคาต่อหน่วย</th>
+              <th><?= $price_header ?></th>
               <th>ราคารวม</th>
             </tr>
           </thead>
           <tbody>
-            <?php if ($itemsResult->num_rows > 0): ?>
-              <?php while ($item = $itemsResult->fetch_assoc()): ?>
+            <?php if (!empty($all_items)): ?>
+              <?php foreach ($all_items as $item): ?>
                 <tr>
                   <td class="product-name-col"><?= htmlspecialchars($item['product_name']) ?></td>
                   <td><?= number_format($item['quantity'], 0) ?></td>
-                  <td><?= htmlspecialchars($item['unit']) ?></td>
+                  <td><?= htmlspecialchars($item['base_unit']) ?></td>
                   <td><?= number_format($item['purchase_price'], 2) ?></td>
                   <td><?= number_format($item['total'], 2) ?></td>
                 </tr>
-              <?php endwhile; ?>
+              <?php endforeach; ?>
             <?php else: ?>
               <tr><td colspan="5" class="text-center text-muted">ไม่มีรายการสินค้าในบิลนี้</td></tr>
             <?php endif; ?>
@@ -146,7 +167,8 @@ body {
       <?php endif; ?>
 
       <div class="mt-4">
-        <a href="warehouse_page.php" class="btn btn-secondary">กลับ</a>
+        <a href="warehouse_page.php" class="btn btn-secondary no-print">กลับ</a>
+        <button onclick="window.print()" class="btn btn-info no-print">พิมพ์ใบเสร็จ</button>
       </div>
     </div>
   </div>
