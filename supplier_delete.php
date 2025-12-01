@@ -26,7 +26,7 @@ if ($result['total'] > 0) {
     echo "<script>
             alert('ไม่สามารถลบซัพพลายเออร์นี้ได้ เนื่องจากมีสินค้าเชื่อมโยงอยู่');
             window.location='suppliers.php';
-          </script>";
+          </script>"; 
     exit();
 }
 

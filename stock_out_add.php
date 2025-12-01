@@ -48,13 +48,13 @@ $result = $conn->query($sql);
 
 <div class="container mt-4">
     <h2 class="fw-bold mb-4">เพิ่มบิลขายสินค้า</h2>
-    <form action="stock_out_save.php" method="POST" id="sale-form">
+    <form action="stock_out_save.php" method="POST" id="sale-form" onsubmit="return confirm('คุณต้องการบันทึกการขายนี้ใช่หรือไม่?');">
 
         <div class="mb-3 col-md-4">
             <label for="sale_date" class="form-label">วันที่ขาย</label>
             <input type="date" id="sale_date" name="sale_date" class="form-control" required>
         </div>
-
+ 
         <table class="table table-bordered">
             <thead class="table-dark text-center">
                 <tr>

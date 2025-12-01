@@ -78,13 +78,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
-      </div>
+      </div> 
     </div>
   </nav>
 
 <div class="container mt-5">
   <h2 class="mb-4">เพิ่มสินค้าใหม่</h2>
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" onsubmit="return confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?');">
     
     <div class="mb-3">
       <label class="form-label">ชื่อสินค้า</label>
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" class="form-control" id="sub_unit" name="sub_unit">
       </div>
       <div class="col-md-4 mb-3">
-        <label for="unit_conversion_rate" class="form-label">อัตราแปลง (1 หน่วยหลัก = ? หน่วยย่อย)</label>
+        <label for="unit_conversion_rate" class="form-label">จำนวนหน่วยย่อยต่อ 1 หน่วยหลัก (1 หน่วยหลัก = ? หน่วยย่อย)</label>
         <input type="number" class="form-control" id="unit_conversion_rate" name="unit_conversion_rate" value="1" step="0.01" required>
         <div class="form-text">ถ้าไม่มีหน่วยย่อย ให้ใส่ 1</div>
       </div>

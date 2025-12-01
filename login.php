@@ -22,7 +22,7 @@
         <?php 
         
         if(isset($_POST['enter'])) {
-
+ 
             // 1. เปลี่ยนชื่อตัวแปรที่รับจากฟอร์ม
             $username_input = $_POST['username'];
             $password_input = $_POST['pws'];

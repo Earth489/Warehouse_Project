@@ -75,7 +75,7 @@ $result = $stmt->get_result();
     .table thead.table-dark th {
       font-size: 0.9rem;
       font-weight: 500;
-    }
+    } 
     /* จัดการข้อความยาวในคอลัมน์ชื่อสินค้า */
     .product-name-col {
       max-width: 250px; /* กำหนดความกว้างสูงสุดของคอลัมน์ */
@@ -118,34 +118,45 @@ $result = $stmt->get_result();
   <!-- ปุ่ม + เพิ่มสินค้าใหม่ -->
   <a href="add_product.php" class="btn btn-primary mb-3">+ เพิ่มสินค้าใหม่</a>
 
-  <!-- ฟอร์มค้นหา -->
-  <form method="get" class="card card-body mb-4">
-    <div class="row g-3">
-      <div class="col-md-4">
+ <!-- ฟอร์มค้นหา -->
+<form method="get" class="card card-body mb-4">
+  <div class="row g-3 align-items-center">
+
+    <!-- เลือกประเภทสินค้า -->
+    <div class="col-md-3">
+      <select name="category_id" class="form-select">
+        <option value=""> ทุกประเภท </option>
+        <?php mysqli_data_seek($categories, 0); while($c = $categories->fetch_assoc()): ?>
+          <option value="<?= $c['category_id'] ?>" <?= ($category_id == $c['category_id']) ? 'selected' : '' ?>><?= htmlspecialchars($c['category_name']) ?></option>
+        <?php endwhile; ?>
+      </select>
+    </div>
+
+    <!-- เลือกซัพพลายเออร์ -->
+    <div class="col-md-3">
+      <select name="supplier_id" class="form-select">
+        <option value=""> ทุกซัพพลายเออร์ </option>
+        <?php mysqli_data_seek($suppliers, 0); while($s = $suppliers->fetch_assoc()): ?>
+          <option value="<?= $s['supplier_id'] ?>" <?= ($supplier_id == $s['supplier_id']) ? 'selected' : '' ?>><?= htmlspecialchars($s['supplier_name']) ?></option>
+        <?php endwhile; ?>
+      </select>
+    </div>
+
+    <!-- ช่องพิมพ์ + ปุ่มติดกัน -->
+    <div class="col-md-4">
+      <div class="input-group">
         <input type="text" name="search_term" class="form-control" placeholder="ค้นหาชื่อสินค้า..." value="<?= htmlspecialchars($search_term) ?>">
-      </div>
-      <div class="col-md-3">
-        <select name="category_id" class="form-select">
-          <option value=""> ทุกประเภท </option>
-          <?php mysqli_data_seek($categories, 0); while($c = $categories->fetch_assoc()): ?>
-            <option value="<?= $c['category_id'] ?>" <?= ($category_id == $c['category_id']) ? 'selected' : '' ?>><?= htmlspecialchars($c['category_name']) ?></option>
-          <?php endwhile; ?>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <select name="supplier_id" class="form-select">
-          <option value=""> ทุกซัพพลายเออร์ </option>
-          <?php mysqli_data_seek($suppliers, 0); while($s = $suppliers->fetch_assoc()): ?>
-            <option value="<?= $s['supplier_id'] ?>" <?= ($supplier_id == $s['supplier_id']) ? 'selected' : '' ?>><?= htmlspecialchars($s['supplier_name']) ?></option>
-          <?php endwhile; ?>
-        </select>
-      </div>
-      <div class="col-md-2 d-flex gap-2">
-        <button type="submit" class="btn btn-info w-100">ค้นหา</button>
-        <a href="products.php" class="btn btn-secondary w-100">ล้างค่า</a>
+        <button type="submit" class="btn btn-primary">ค้นหา</button>
       </div>
     </div>
-  </form>
+
+    <!-- ปุ่มล้าง/รีเซ็ต -->
+    <div class="col-md-2">
+      <a href="products.php" class="btn btn-dark w-100">-</a>
+    </div>
+
+  </div>
+</form>
 
 </div>
 

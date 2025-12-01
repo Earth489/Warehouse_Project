@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th">  
 <head>
   <meta charset="UTF-8">
   <title>เพิ่มซัพพลายเออร์</title>
@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <div class="container mt-5">
   <h2>เพิ่มซัพพลายเออร์</h2>
-  <form method="post">
+  <form method="post" onsubmit="return confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?');">
     <div class="mb-3">
       <label class="form-label">ชื่อซัพพลายเออร์</label>
       <input type="text" name="supplier_name" class="form-control" required>

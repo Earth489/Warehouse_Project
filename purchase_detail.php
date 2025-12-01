@@ -41,7 +41,7 @@ $itemsResult = $stmt2->get_result();
 
 // ✅ เพิ่ม Logic: ตรวจสอบหน่วยสินค้าในบิลเพื่อเปลี่ยนหัวตารางแบบไดนามิก
 $price_header = "ราคาซื้อต่อหน่วย"; // ค่าเริ่มต้น
-$all_items = [];
+$all_items = []; 
 $all_units = [];
 if ($itemsResult->num_rows > 0) {
     while($item = $itemsResult->fetch_assoc()) {

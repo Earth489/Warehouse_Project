@@ -75,7 +75,7 @@ if (isset($_POST['update'])) {
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
-      </div>
+      </div> 
     </div>
   </nav>
 
@@ -85,7 +85,7 @@ if (isset($_POST['update'])) {
       <h4>แก้ไขข้อมูลซัพพลายเออร์</h4>
     </div>
     <div class="card-body">
-      <form method="POST">
+      <form method="POST" onsubmit="return confirm('คุณต้องการบันทึกการแก้ไขใช่หรือไม่?');">
         <div class="mb-3">
           <label class="form-label">ชื่อซัพพลายเออร์</label>
           <input type="text" name="supplier_name" class="form-control" value="<?= $supplier['supplier_name'] ?>" required>

@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $updStockAndSupplier->execute();
                 } elseif ($current_product_supplier_id == $supplier_id) {
                     $updStockOnly->bind_param("di", $qty_to_add_in_sub_unit, $it['product_id']);
-                    $updStockOnly->execute();
+                    $updStockOnly->execute(); 
                 } else {
                     // กรณีที่ 2b: สินค้ามี supplier_id อยู่แล้วแต่ไม่ตรงกับที่เลือก ให้ยกเลิกและแจ้งเตือน
                     throw new Exception("ไม่สามารถเพิ่ม " . htmlspecialchars($product_name_for_error) . " ได้ เพราะสินค้านี้ผูกกับ Supplier เดิม");
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="alert alert-danger"><?php foreach($errors as $e) echo "<div>$e</div>"; ?></div>
   <?php endif; ?>
 
-  <form method="post">
+  <form method="post" onsubmit="return confirm('คุณต้องการบันทึกบิลรับสินค้านี้ใช่หรือไม่?');">
     <div class="row mb-3">
       <div class="col-md-4">
         <label class="form-label">เลขที่บิล</label>

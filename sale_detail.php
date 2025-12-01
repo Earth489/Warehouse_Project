@@ -11,7 +11,7 @@ if (!isset($_GET['sale_id'])) {
 $sale_id = $_GET['sale_id'];
 
 // ดึงข้อมูลบิลขาย (ไม่ผูกกับ user)
-$sql_sale = "SELECT sale_id, sale_number, sale_date, total_amount 
+$sql_sale = "SELECT sale_id, sale_date, total_amount 
              FROM sales
              WHERE sale_id = ?";
 $stmt = $conn->prepare($sql_sale);
@@ -39,7 +39,7 @@ $result_detail = $stmt2->get_result();
 // ✅ เพิ่ม Logic: ตรวจสอบหน่วยสินค้าในบิลเพื่อเปลี่ยนหัวตารางแบบไดนามิก
 $price_header = "ราคาขายต่อหน่วย"; // ค่าเริ่มต้น
 $all_items = [];
-$all_units = [];
+$all_units = []; 
 if ($result_detail->num_rows > 0) {
     while($item = $result_detail->fetch_assoc()) {
         $all_items[] = $item; // เก็บข้อมูลทั้งหมดไว้ใน array
@@ -101,7 +101,6 @@ if ($result_detail->num_rows > 0) {
       <h4 class="mb-0">รายละเอียดบิลขาย</h4>
     </div>
     <div class="card-body">
-      <p><strong>เลขที่บิล:</strong> <?= htmlspecialchars($sale['sale_number']) ?></p>
       <p><strong>วันที่ขาย:</strong> <?= htmlspecialchars($sale['sale_date']) ?></p>
       <p><strong>ยอดรวม:</strong> <?= number_format($sale['total_amount'], 2) ?> บาท</p>
 

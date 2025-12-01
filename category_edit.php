@@ -76,7 +76,7 @@ if (isset($_POST['update'])) {
         </ul>
       </div>
     </div>
-  </nav>
+  </nav> 
 
 <div class="container mt-5">
   <div class="card">
@@ -84,7 +84,7 @@ if (isset($_POST['update'])) {
       <h4>แก้ไขประเภทสินค้า</h4>
     </div>
     <div class="card-body">
-      <form method="POST">
+      <form method="POST" onsubmit="return confirm('คุณต้องการบันทึกการแก้ไขใช่หรือไม่?');">
         <div class="mb-3">
           <label class="form-label">ชื่อประเภทสินค้า</label>
           <input type="text" name="category_name" class="form-control" value="<?= $category['category_name'] ?>" required>

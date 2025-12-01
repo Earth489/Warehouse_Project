@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// ตรวจสอบว่ามี id ส่งมาหรือไม่
+// ตรวจสอบว่ามี id ส่งมาหรือไม่ 
 if (!isset($_GET['id'])) {
     header("Location: categories.php");
     exit();

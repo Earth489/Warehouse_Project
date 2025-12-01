@@ -31,7 +31,7 @@ if ($bill_type === 'บิลซื้อ (Purchase)') {
     $sql = "
         SELECT 
             s.sale_id AS bill_id, 
-            s.sale_number AS bill_number, 
+            s.sale_id AS bill_number, 
             s.sale_date AS bill_date, 
             'ลูกค้าทั่วไป' AS party_name, 
             s.total_amount, 
@@ -59,7 +59,7 @@ if ($bill_type === 'บิลซื้อ (Purchase)') {
 
         SELECT 
             s.sale_id AS bill_id, 
-            s.sale_number AS bill_number, 
+            s.sale_id AS bill_number, 
             s.sale_date AS bill_date, 
             'ลูกค้าทั่วไป' AS party_name, 
             s.total_amount, 
@@ -165,12 +165,12 @@ while($row = $result->fetch_assoc()) { $all_bills[] = $row; }
             </div>
             <div class="col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-fill">แสดงรายงาน</button>
-                <button type="button" class="btn btn-secondary flex-fill" onclick="window.print()">พิมพ์ (PDF)</button>
+                <button type="button" class="btn btn-danger flex-fill" onclick="window.print()">พิมพ์ (PDF)</button>
             </div>
         </div>
     </form>
 
-    <?php
+    <?php 
         // คำนวณยอดสรุป
         $total_purchase = 0;
         $total_sale = 0;
@@ -203,7 +203,9 @@ while($row = $result->fetch_assoc()) { $all_bills[] = $row; }
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                         <strong>วันที่:</strong> <?= date("d/m/Y", strtotime($row['bill_date'])) ?><br>
+                        <?php if ($row['bill_type'] != 'บิลขาย (Sale)'): ?>
                         <strong>เลขที่บิล:</strong> <?= htmlspecialchars($row['bill_number']) ?><br>
+                        <?php endif; ?>
                         <strong>คู่ค้า:</strong> <?= htmlspecialchars($row['party_name']) ?>
                     </div>
                     <span class="badge <?= ($row['bill_type'] == 'บิลซื้อ (Purchase)') ? 'bg-success' : 'bg-danger' ?>">

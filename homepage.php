@@ -6,7 +6,7 @@ session_start();
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();  
-}
+} 
 
 // ยอดขายรวมของเดือนปัจจุบัน
 $current_month_sales = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM sales WHERE DATE_FORMAT(sale_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];

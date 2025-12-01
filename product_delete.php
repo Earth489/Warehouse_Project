@@ -12,9 +12,9 @@ if (!isset($_SESSION['user_id'])) {
 if (!isset($_GET['id'])) {
     header("Location: products.php");
     exit();
-}
+} 
 
-$product_id = $_GET['id'];
+$product_id = $_GET['id']; 
 
 // ลบรูปภาพในโฟลเดอร์ (ถ้ามี)
 $sql_img = "SELECT image_path FROM products WHERE product_id = ?";

@@ -34,7 +34,7 @@ $sql = "
         (
             SELECT 
                 s.sale_id AS bill_id,
-                s.sale_number AS bill_number,
+                s.sale_id AS bill_number, 
                 s.sale_date AS bill_date,
                 s.total_amount,
                 'ลูกค้าทั่วไป' AS party_name,
@@ -143,7 +143,7 @@ body { background-color: #f8f9fa; }
          <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
-        </ul>
+        </ul> 
       </div>
     </div>
   </nav>
@@ -236,7 +236,6 @@ body { background-color: #f8f9fa; }
             <thead class="table-dark">
                 <tr>
                     <th>วันที่</th>
-                    <th>เลขที่บิล</th>
                     <th>ยอดรวม (บาท)</th>
                     <th>จัดการ</th>
                 </tr>
@@ -244,9 +243,8 @@ body { background-color: #f8f9fa; }
             <tbody>
                 <?php if (!empty($bills_out)): ?>
                     <?php foreach ($bills_out as $row): ?>
-                        <tr>
+                        <tr class="align-middle">
                             <td><?= date("d/m/Y", strtotime($row['bill_date'])) ?></td>
-                            <td><?= htmlspecialchars($row['bill_number']) ?></td>
                             <td class="text-end"><?= number_format($row['total_amount'], 2) ?></td>
                             <td class="text-center">
                                 <a href="<?= $row['detail_page'] ?>?<?= $row['param_name'] ?>=<?= $row['bill_id'] ?>" class="btn btn-sm btn-info">ดูรายละเอียด</a>
@@ -255,13 +253,13 @@ body { background-color: #f8f9fa; }
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="4" class="text-center text-muted">ไม่พบข้อมูลบิลขายสินค้า</td>
+                        <td colspan="3" class="text-center text-muted">ไม่พบข้อมูลบิลขายสินค้า</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
             <tfoot>
                 <tr class="table-light">
-                    <th colspan="2" class="text-end">ยอดรวมบิลขายออกที่แสดง:</th>
+                    <th colspan="1" class="text-end">ยอดรวมบิลขายออกที่แสดง:</th>
                     <th class="text-end"><?= number_format($total_out, 2) ?></th>
                     <th></th>
                 </tr>

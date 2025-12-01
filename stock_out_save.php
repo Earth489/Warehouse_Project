@@ -10,8 +10,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
     $quantities = $_POST['quantity'];
     $sale_units = $_POST['sale_unit']; // ✅ รับค่า 'หน่วยที่ขาย' ที่ส่งมาจากฟอร์ม
 
-    // สร้างเลขที่บิลแบบง่าย
-    $sale_number = 'SO' . date('YmdHis');
 
     $conn->begin_transaction();
 
@@ -24,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
         for ($i = 0; $i < count($product_ids); $i++) {
             $pid = (int)$product_ids[$i];
             $qty = (int)$quantities[$i];
-            $unit = $sale_units[$i];
+            $unit = $sale_units[$i]; 
 
             if ($pid > 0 && $qty > 0) {
                 $price_stmt->bind_param("i", $pid);
@@ -37,11 +35,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['product_id'])) {
                 $total_amount += ($qty * $price * $multiplier);
             }
         }
-        // บันทึกลงตาราง sales
-        $stmt = $conn->prepare("INSERT INTO sales (sale_number, user_id, sale_date, total_amount) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("sisd", $sale_number, $user_id, $sale_date, $total_amount);
-        $stmt->execute();
-        $sale_id = $stmt->insert_id;
+// แก้ไขคำสั่ง INSERT
+$stmt = $conn->prepare("INSERT INTO sales (user_id, sale_date, total_amount) VALUES (?, ?, ?)");
+$stmt->bind_param("isd", $user_id, $sale_date, $total_amount);
+$stmt->execute();
+$sale_id = $stmt->insert_id;
 
         // บันทึกสินค้าใน sale_details และอัปเดตสต็อก
         // ✅ เตรียมคำสั่งให้รองรับการบันทึก sale_unit

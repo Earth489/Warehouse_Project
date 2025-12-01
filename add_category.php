@@ -54,11 +54,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </ul>
       </div>
     </div>
-  </nav>
+  </nav> 
 
 <div class="container mt-5">
   <h2>เพิ่มประเภทสินค้า</h2>
-  <form method="post">
+  <form method="post" onsubmit="return confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?');">
     <div class="mb-3">
       <label class="form-label">ชื่อประเภทสินค้า</label>
       <input type="text" name="category_name" class="form-control" required>
