@@ -117,8 +117,8 @@ while($row = $result->fetch_assoc()) { $all_bills[] = $row; }
 }
 </style>
 </head>
-<body>
-
+<body> 
+ 
 <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
@@ -159,8 +159,8 @@ while($row = $result->fetch_assoc()) { $all_bills[] = $row; }
                 <label class="form-label">ประเภทบิล</label>
                 <select name="bill_type" class="form-select">
                     <option value="all" <?= $bill_type == 'all' ? 'selected' : '' ?>>บิลทั้งหมด</option>
-                    <option value="บิลซื้อ (Purchase)" <?= $bill_type == 'บิลซื้อ (Purchase)' ? 'selected' : '' ?>>บิลรับเข้า</option>
-                    <option value="บิลขาย (Sale)" <?= $bill_type == 'บิลขาย (Sale)' ? 'selected' : '' ?>>บิลขายออก</option>
+                    <option value="บิลซื้อ (Purchase)" <?= $bill_type == 'บิลซื้อ (Purchase)' ? 'selected' : '' ?>>บิลรับสินค้า</option>
+                    <option value="บิลขาย (Sale)" <?= $bill_type == 'บิลขาย (Sale)' ? 'selected' : '' ?>>บิลขายสินค้า</option>
                 </select>
             </div>
             <div class="col-md-3 d-flex gap-2">

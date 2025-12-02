@@ -6,7 +6,7 @@ session_start();
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();  
-} 
+}
 
 // ยอดขายรวมของเดือนปัจจุบัน
 $current_month_sales = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM sales WHERE DATE_FORMAT(sale_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
@@ -15,22 +15,34 @@ $current_month_sales = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS tota
 $current_month_purchases = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM purchases WHERE DATE_FORMAT(purchase_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
 
 // เดือนปัจจุบันสำหรับแสดงผล
-$current_month_thai = date('m/Y');
-
+$thai_months = [
+    1 => "มกราคม", 2 => "กุมภาพันธ์", 3 => "มีนาคม",
+    4 => "เมษายน", 5 => "พฤษภาคม", 6 => "มิถุนายน",
+    7 => "กรกฎาคม", 8 => "สิงหาคม", 9 => "กันยายน",
+    10 => "ตุลาคม", 11 => "พฤศจิกายน", 12 => "ธันวาคม"
+];
+$current_month_number = (int)date('m');
+$current_year_buddhist = (int)date('Y') + 543;
+$current_month_thai = $thai_months[$current_month_number] . " " . $current_year_buddhist;
 
 ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>ระบบจัดการคลังสินค้า - ร้านวัสดุก่อสร้าง</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการคลังสินค้า</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
 </head>
 <body>
 
+       
+ 
   <!-- แถบเมนูด้านบน -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">🏠 Warehouse System</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -55,19 +67,20 @@ $current_month_thai = date('m/Y');
   <div class="container my-5">
     <h1 class="mb-4">ระบบจัดการคลังสินค้า</h1>
 
+    <h3 class="mt-4 mb-3">สรุปยอดประจำเดือน</h3>
     <div class="row mb-5">
       <div class="col-md-6 mb-3">
-        <div class="card bg-success text-white shadow-sm">
+        <div class="card bg-danger text-white shadow-sm">
           <div class="card-body">
-            <h5 class="card-title">ยอดขายรวมเดือน <?= $current_month_thai ?></h5>
+            <h5 class="card-title">ยอดขายรวมประจำเดือน <?= $current_month_thai ?></h5>
             <p class="card-text fs-3"><?= number_format($current_month_sales, 2) ?> บาท</p>
           </div>
         </div>
       </div>
       <div class="col-md-6 mb-3">
-        <div class="card bg-danger text-white shadow-sm">
+        <div class="card bg-success text-white shadow-sm">
           <div class="card-body">
-            <h5 class="card-title">ยอดซื้อรวมเดือน <?= $current_month_thai ?></h5>
+            <h5 class="card-title">ยอดซื้อรวมประจำเดือน <?= $current_month_thai ?></h5>
             <p class="card-text fs-3"><?= number_format($current_month_purchases, 2) ?> บาท</p>
           </div>
         </div>

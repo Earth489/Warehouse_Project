@@ -147,7 +147,7 @@ body { background-color: #f8f9fa; }
       </div>
     </div>
   </nav>
-
+  
 <div class="container mt-4 mb-5">
   <h2 class="fw-bold mb-4"> รายการบิลสินค้า</h2>
 
@@ -173,12 +173,12 @@ body { background-color: #f8f9fa; }
   <ul class="nav nav-tabs" id="billTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="in-tab" data-bs-toggle="tab" data-bs-target="#in" type="button" role="tab">
-         บิลรับสินค้าเข้า
+         บิลรับสินค้า
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="out-tab" data-bs-toggle="tab" data-bs-target="#out" type="button" role="tab">
-         บิลขายสินค้าออก
+         บิลขายสินค้า
       </button>
     </li>
   </ul>
@@ -187,7 +187,7 @@ body { background-color: #f8f9fa; }
 
     <!-- บิลรับสินค้าเข้า -->
     <div class="tab-pane fade show active" id="in" role="tabpanel">
-  <a href="stock_in_add.php" class="btn btn-success mb-3">+ เพิ่มบิลรับสินค้า</a>
+  <a href="stock_in_add.php" class="btn btn-success mb-3">เพิ่มบิลรับสินค้า</a>
 
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
@@ -230,7 +230,7 @@ body { background-color: #f8f9fa; }
 
     <!-- บิลขายสินค้าออก -->
     <div class="tab-pane fade" id="out" role="tabpanel">
-  <a href="stock_out_add.php" class="btn btn-danger mb-3">+ เพิ่มบิลขายสินค้า</a>
+  <a href="stock_out_add.php" class="btn btn-danger mb-3">เพิ่มบิลขายสินค้า</a>
 
         <table class="table table-bordered table-striped">
             <thead class="table-dark">

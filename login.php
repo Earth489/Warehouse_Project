@@ -17,12 +17,12 @@
     <link rel="stylesheet" href="login.css">
     <title>เข้าสู่ระบบ</title>
 </head>
-<body>
+<body> 
         <form action="Login.php" method="POST">
         <?php 
         
         if(isset($_POST['enter'])) {
- 
+
             // 1. เปลี่ยนชื่อตัวแปรที่รับจากฟอร์ม
             $username_input = $_POST['username'];
             $password_input = $_POST['pws'];

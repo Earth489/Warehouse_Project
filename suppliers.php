@@ -17,13 +17,19 @@ $result = $conn->query($sql);
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>ซัพพลายเออร์ - ระบบคลังสินค้า</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ซัพพลายเออร์</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
 </head>
 <body>
 
-<!-- แถบเมนูด้านบน -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      
+
+ <!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">🏠 Warehouse System</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -40,10 +46,10 @@ $result = $conn->query($sql);
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
-      </div> 
+      </div>
     </div>
   </nav>
-
+  
 <div class="container mt-4">
   <h2>ซัพพลายเออร์</h2>
   <a href="add_suppliers.php" class="btn btn-primary mb-3">+ เพิ่มซัพพลายเออร์</a>

@@ -26,10 +26,10 @@ if ($result['total'] > 0) {
     echo "<script>
             alert('ไม่สามารถลบซัพพลายเออร์นี้ได้ เนื่องจากมีสินค้าเชื่อมโยงอยู่');
             window.location='suppliers.php';
-          </script>"; 
+          </script>";
     exit();
 }
-
+  
 // ถ้าไม่ถูกใช้งาน — ลบข้อมูล
 $sql = "DELETE FROM suppliers WHERE supplier_id = ?";
 $stmt = $conn->prepare($sql);

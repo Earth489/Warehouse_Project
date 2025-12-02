@@ -12,9 +12,9 @@ if (!isset($_SESSION['user_id'])) {
 if (!isset($_GET['id'])) {
     header("Location: products.php");
     exit();
-} 
+}
 
-$product_id = $_GET['id']; 
+$product_id = $_GET['id'];
 
 // ลบรูปภาพในโฟลเดอร์ (ถ้ามี)
 $sql_img = "SELECT image_path FROM products WHERE product_id = ?";
@@ -32,7 +32,7 @@ if ($row = $result->fetch_assoc()) {
 $sql_delete = "DELETE FROM products WHERE product_id = ?";
 $stmt = $conn->prepare($sql_delete);
 $stmt->bind_param("i", $product_id);
-
+ 
 try {
     if ($stmt->execute()) {
         echo "<script>alert('ลบสินค้าสำเร็จ'); window.location='products.php';</script>";
@@ -50,3 +50,4 @@ try {
 }
 
 ?>
+ 

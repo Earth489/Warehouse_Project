@@ -82,8 +82,8 @@ body {
 }
 </style>
 </head>
-<body>
-
+<body> 
+ 
 <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">

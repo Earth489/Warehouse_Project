@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 23, 2025 at 04:04 AM
+-- Generation Time: Dec 02, 2025 at 11:21 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -20,7 +20,7 @@ SET time_zone = "+00:00";
 --
 -- Database: `warehouse`
 --
- 
+
 -- --------------------------------------------------------
 
 --
@@ -38,9 +38,20 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`category_id`, `category_name`, `description`) VALUES
-(1, 'วัสดุก่อสร้างหลัก', 'พวกอิฐ หิน ปูน ทราย'),
-(5, 'อุปกรณ์เสริม', ''),
-(8, 'อุปกรณ์ช่าง', '');
+(1, 'วัสดุงานโครงสร้าง\r\n', 'คอนกรีต เหล็กโครงสร้าง เหล็กเส้น ไม้'),
+(5, 'วัสดุงานหลังคา', 'กระเบื้องมุงหลังคา ฉนวนกันความร้อน สีทากันซึม'),
+(8, 'วัสดุงานผนัง', 'อิฐ สีทาบ้าน แผ่นคอนกรีตสำเร็จรูป'),
+(12, 'วัสดุงานพื้น', 'กระเบื้องปูพื้น กระเบื้องยาง ยาแนวกระเบื้อง'),
+(13, 'วัสดุงานระบบไฟฟ้า', 'สายไฟฟ้า โคมไฟและหลอดไฟ กล่องสวิตช์และเต้ารับ เทปพันสายไฟ'),
+(14, 'วัสดุงานระบบประปา', 'ท่อPVC ท่อ CPVC น้ำยาประสานท่อ'),
+(15, 'อุปกรณ์ชั่วคราว ฯลฯ', 'บันไดพับ นั่งร้าน แบบหล่อคอนกรีต'),
+(16, 'เครื่องจักรหนัก', 'เครื่องตอก/เจาะเสาเข็ม'),
+(17, 'เครื่องมือช่าง', 'ไขควง ประแจ คีมปอกสายไฟ เครื่องมือวัดระยะ ล้อวัดระยะ เลื่อยชัก'),
+(18, 'เครื่องมือช่างไฟฟ้า', 'สว่าน เครื่องเจียร เลื่อยวงเดือน '),
+(22, 'อุปกรณ์ชั่วคราว ฯลฯ', 'บันไดพับ นั่งร้าน แบบหล่อคอนกรีต'),
+(23, 'เครื่องจักรหนัก', 'เครื่องตอก/เจาะเสาเข็ม'),
+(24, 'เครื่องมือช่าง', 'ไขควง ประแจ คีมปอกสายไฟ เครื่องมือวัดระยะ ล้อวัดระยะ เลื่อยชัก'),
+(25, 'เครื่องมือช่างไฟฟ้า', 'สว่าน เครื่องเจียร เลื่อยวงเดือน ');
 
 -- --------------------------------------------------------
 
@@ -53,11 +64,11 @@ CREATE TABLE `products` (
   `product_name` varchar(150) NOT NULL,
   `category_id` int(11) DEFAULT NULL,
   `supplier_id` int(11) DEFAULT NULL,
-  `base_unit` varchar(50) DEFAULT NULL COMMENT 'หน่วยหลัก (เช่น กระสอบ, กล่อง)',
-  `sub_unit` varchar(50) DEFAULT NULL COMMENT 'หน่วยย่อย (เช่น กิโลกรัม, ชิ้น)',
-  `unit_conversion_rate` decimal(10,2) NOT NULL DEFAULT 1.00 COMMENT 'อัตราแปลงจากหน่วยหลักไปหน่วยย่อย',
-  `stock_in_sub_unit` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT 'สต็อกคงเหลือในหน่วยย่อยที่สุด',
-  `selling_price` decimal(10,2) NOT NULL,
+  `base_unit` varchar(50) DEFAULT NULL,
+  `sub_unit` varchar(50) DEFAULT NULL,
+  `unit_conversion_rate` decimal(10,2) NOT NULL DEFAULT 1.00,
+  `stock_in_sub_unit` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `selling_price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `reorder_level` decimal(10,2) NOT NULL DEFAULT 0.00,
   `image_path` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -67,10 +78,10 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `supplier_id`, `base_unit`, `sub_unit`, `unit_conversion_rate`, `stock_in_sub_unit`, `selling_price`, `reorder_level`, `image_path`) VALUES
-(7, 'ปูนซีเมนต์ SCG/ตราเสือ ปูนเสือ (แบ่งขายขนาด 2 กก.) \r\nบวกลบ ไม่เกิน 1ขีด สำหรับซ่อมแซมหรือต่อเติมเล็กๆน้อยๆ\r\n', 1, 1, 'ถุง', NULL, 1.00, 5.00, 55.00, 20.00, 'uploads/1759834971_ปูน.png'),
-(8, 'ทราย', 1, 4, 'ถุง', NULL, 1.00, 4.00, 50.00, 20.00, 'uploads/1759834997_ทราย.jpg'),
-(9, 'หิน', 1, 1, 'ถุง', NULL, 1.00, 212.00, 50.00, 15.00, 'uploads/1761633736_หิน.jpg'),
-(10, 'อิฐมวลเบา', 1, 1, 'ก้อน', NULL, 1.00, 1545.00, 10.00, 50.00, 'uploads/อิฐ.jpg');
+(19, 'ซีเมนต์ฉาบบาง ภายใน สีขาว 20กก ลูกดิ่ง #เหลือง', 1, 3, 'ถุง', 'กิโลกรัม', 50.00, 150.00, 10.00, 40.00, 'uploads/prod_692e53a01afe96.44497067.png'),
+(22, 'ปูนมอร์ตาร์ 50 กก. เสืออีซี #ก่อ-เทสำเร็จ', 1, 1, 'ถุง', 'กิโลกรัม', 50.00, 498.00, 10.00, 40.00, 'uploads/prod_692e8d2829c144.21304341.png'),
+(23, 'ไขควงลองไฟ Champion #7700', 13, 1, 'อัน', NULL, 1.00, 50.00, 15.00, 20.00, 'uploads/prod_692e8d368c8f67.36825925.png'),
+(24, 'สีเคลือบเงา TOA #G100 14กล.- สีขาว', 8, 3, 'แกลลอน', NULL, 1.00, 10.00, 230.00, 10.00, 'uploads/prod_692ea65f4cc049.16606036.jpg');
 
 -- --------------------------------------------------------
 
@@ -83,7 +94,7 @@ CREATE TABLE `purchases` (
   `purchase_number` varchar(50) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `supplier_id` int(11) DEFAULT NULL,
-  `purchase_date` datetime DEFAULT current_timestamp(),
+  `purchase_date` date DEFAULT NULL,
   `total_amount` decimal(12,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -92,14 +103,9 @@ CREATE TABLE `purchases` (
 --
 
 INSERT INTO `purchases` (`purchase_id`, `purchase_number`, `user_id`, `supplier_id`, `purchase_date`, `total_amount`) VALUES
-(9, '22154855', 1, 1, '2025-10-07 00:00:00', 5500.00),
-(11, '22154856', 1, 1, '2025-10-07 00:00:00', 4400.00),
-(12, '215484896654', 1, 4, '2025-10-28 00:00:00', 6450.00),
-(13, '2221514455', 1, 1, '2025-10-28 00:00:00', 6300.00),
-(20, '284243245245245', 1, 1, '2025-11-17 00:00:00', 13000.00),
-(21, '5252545242542', 1, 1, '2025-11-18 00:00:00', 3450.00),
-(22, '21542542542452', 1, 1, '2025-11-18 00:00:00', 3300.00),
-(26, '1231331313', 1, 1, '2025-11-17 00:00:00', 3700.00);
+(32, 'ฺBI68063293', 1, 3, '2025-12-01', 3500.00),
+(33, 'ST47856684', 1, 1, '2025-11-30', 4500.00),
+(34, 'ST12548965', 1, 3, '2025-12-02', 4000.00);
 
 -- --------------------------------------------------------
 
@@ -120,25 +126,10 @@ CREATE TABLE `purchase_details` (
 --
 
 INSERT INTO `purchase_details` (`purchase_detail_id`, `purchase_id`, `product_id`, `quantity`, `purchase_price`) VALUES
-(9, 9, 7, 50, 70.00),
-(12, 11, 7, 40, 70.00),
-(13, 11, 8, 40, 40.00),
-(14, 12, 9, 70, 35.00),
-(15, 12, 8, 40, 40.00),
-(16, 12, 7, 40, 60.00),
-(17, 13, 10, 500, 7.00),
-(18, 13, 7, 60, 30.00),
-(19, 13, 9, 50, 20.00),
-(21, 20, 7, 50, 40.00),
-(22, 20, 9, 50, 20.00),
-(23, 20, 10, 1000, 10.00),
-(24, 21, 10, 50, 20.00),
-(25, 21, 7, 50, 25.00),
-(26, 21, 9, 50, 24.00),
-(27, 22, 7, 50, 50.00),
-(28, 22, 9, 40, 20.00),
-(29, 26, 7, 50, 50.00),
-(30, 26, 9, 30, 40.00);
+(35, 32, 19, 10, 350.00),
+(36, 33, 22, 10, 400.00),
+(37, 33, 23, 50, 10.00),
+(38, 34, 24, 20, 200.00);
 
 -- --------------------------------------------------------
 
@@ -148,9 +139,8 @@ INSERT INTO `purchase_details` (`purchase_detail_id`, `purchase_id`, `product_id
 
 CREATE TABLE `sales` (
   `sale_id` int(11) NOT NULL,
-  `sale_number` varchar(20) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
-  `sale_date` datetime DEFAULT current_timestamp(),
+  `sale_date` date DEFAULT NULL,
   `total_amount` decimal(12,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -158,15 +148,9 @@ CREATE TABLE `sales` (
 -- Dumping data for table `sales`
 --
 
-INSERT INTO `sales` (`sale_id`, `sale_number`, `user_id`, `sale_date`, `total_amount`) VALUES
-(2, 'SO20251023053157', 1, '2025-10-23 00:00:00', 5700.00),
-(3, 'SO20251023053334', 1, '2025-10-23 00:00:00', 3900.00),
-(5, 'SO20251028074440', 1, '2025-10-28 00:00:00', 5700.00),
-(6, 'SO20251107080109', 1, '2025-11-07 00:00:00', 0.00),
-(7, 'SO20251107080140', 1, '2025-11-06 00:00:00', 0.00),
-(8, 'SO20251107080305', 1, '2025-11-05 00:00:00', 7000.00),
-(9, 'SO20251118042212', 1, '2025-11-18 00:00:00', 1100.00),
-(10, 'SO20251118100334', 1, '2025-11-18 00:00:00', 50.00);
+INSERT INTO `sales` (`sale_id`, `user_id`, `sale_date`, `total_amount`) VALUES
+(25, 1, '2025-12-02', 520.00),
+(26, 1, '2025-12-02', 2300.00);
 
 -- --------------------------------------------------------
 
@@ -179,33 +163,18 @@ CREATE TABLE `sale_details` (
   `sale_id` int(11) DEFAULT NULL,
   `product_id` int(11) DEFAULT NULL,
   `quantity` int(11) NOT NULL,
-  `sale_price` decimal(10,2) NOT NULL
+  `sale_price` decimal(10,2) NOT NULL,
+  `sale_unit` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `sale_details`
 --
 
-INSERT INTO `sale_details` (`sale_detail_id`, `sale_id`, `product_id`, `quantity`, `sale_price`) VALUES
-(1, 2, 8, 50, 50.00),
-(2, 2, 7, 40, 80.00),
-(3, 3, 8, 30, 50.00),
-(4, 3, 7, 30, 80.00),
-(6, 5, 8, 20, 50.00),
-(7, 5, 7, 40, 80.00),
-(8, 5, 9, 30, 50.00),
-(9, 6, 8, 0, 50.00),
-(10, 6, 7, 0, 80.00),
-(11, 7, 7, 0, 80.00),
-(12, 7, 10, 0, 10.00),
-(13, 7, 8, 0, 50.00),
-(14, 8, 8, 20, 50.00),
-(15, 8, 7, 50, 80.00),
-(16, 8, 9, 40, 50.00),
-(17, 9, 7, 5, 80.00),
-(18, 9, 9, 8, 50.00),
-(19, 9, 8, 6, 50.00),
-(20, 10, 10, 5, 10.00);
+INSERT INTO `sale_details` (`sale_detail_id`, `sale_id`, `product_id`, `quantity`, `sale_price`, `sale_unit`) VALUES
+(31, 25, 19, 1, 10.00, 'ถุง'),
+(32, 25, 22, 2, 10.00, 'กิโลกรัม'),
+(33, 26, 24, 10, 230.00, 'แกลลอน');
 
 -- --------------------------------------------------------
 
@@ -225,9 +194,9 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`supplier_id`, `supplier_name`, `address`, `phone`) VALUES
-(1, 'บริษัท A', 'กรุงเทพ', '0999999999'),
-(3, 'บริษัท B', 'กรุงเทพ', '0888888888'),
-(4, 'บริษัท C', 'กรุงเทพ', '0777777777');
+(1, 'บริษัท วิคตอรี่ สตีล อิมปอร์ต เอ็กซ์ปอร์ต จำกัด', '7 ซอยเพชรเกษม 57 แขวงหลักสอง เขตบางแค กรุงเทพ 10160', '024319629'),
+(3, 'บริษัท กรีนไลฟ์ เอ็นเตอร์ไฟรส์ จำกัด', '5 หมู่ที่ 4 ต.ท่าเสา อ.กระทุ่มแบน จ.สมุทรสาคร 74110', '034474008'),
+(4, 'ห้างหุ้นส่วนจำกัด ไทยวิวัฒน์สุขภัณฑ์', '1221/8-9 ถนนสุขุมวิท แขวงคลองตันเหนือ เขตวัฒนา กรุงเทพ 10110', '023917201');
 
 -- --------------------------------------------------------
 
@@ -318,43 +287,43 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `purchase_details`
 --
 ALTER TABLE `purchase_details`
-  MODIFY `purchase_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `purchase_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `sale_details`
 --
 ALTER TABLE `sale_details`
-  MODIFY `sale_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `sale_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `users`

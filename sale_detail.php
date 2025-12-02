@@ -72,7 +72,7 @@ if ($result_detail->num_rows > 0) {
     </style>
 </head>
 <body class="bg-light">
-
+  
 <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">

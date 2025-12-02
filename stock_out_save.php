@@ -93,7 +93,7 @@ $sale_id = $stmt->insert_id;
         $conn->rollback();
         echo "<script>alert('เกิดข้อผิดพลาด: " . $e->getMessage() . "'); history.back();</script>";
     }
-
+  
 } else {
     echo "<script>alert('กรุณาเลือกสินค้าก่อนทำการบันทึก'); history.back();</script>";
 }

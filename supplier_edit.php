@@ -52,13 +52,19 @@ if (isset($_POST['update'])) {
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>แก้ไขซัพพลายเออร์</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แก้ไขข้อมูลซัพพลายเออร์</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
 </head>
-<body class="bg-light">
+<body>
 
-<!-- แถบเมนูด้านบน -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      
+
+ <!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">🏠 Warehouse System</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -72,20 +78,20 @@ if (isset($_POST['update'])) {
           <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
           <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
          <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
-          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link " href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
-      </div> 
+      </div>
     </div>
   </nav>
-
+  
 <div class="container mt-5">
   <div class="card shadow">
     <div class="card-header bg-warning text-white">
       <h4>แก้ไขข้อมูลซัพพลายเออร์</h4>
     </div>
     <div class="card-body">
-      <form method="POST" onsubmit="return confirm('คุณต้องการบันทึกการแก้ไขใช่หรือไม่?');">
+      <form method="POST" id="editSupplierForm">
         <div class="mb-3">
           <label class="form-label">ชื่อซัพพลายเออร์</label>
           <input type="text" name="supplier_name" class="form-control" value="<?= $supplier['supplier_name'] ?>" required>
@@ -104,6 +110,14 @@ if (isset($_POST['update'])) {
     </div>
   </div>
 </div>
+
+<script>
+    document.getElementById('editSupplierForm').addEventListener('submit', function(event) {
+        if (!confirm('คุณต้องการบันทึกการแก้ไขข้อมูลซัพพลายเออร์นี้ใช่หรือไม่?')) {
+            event.preventDefault();
+        }
+    });
+</script>
 
 </body>
 </html>

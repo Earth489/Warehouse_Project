@@ -27,16 +27,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html lang="th">  
+<html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>เพิ่มซัพพลายเออร์</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เพิ่มซัพพลายเออร์ใหม่</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
 </head>
 <body>
 
-<!-- แถบเมนูด้านบน -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+       
+ 
+  <!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
       <a class="navbar-brand" href="#">🏠 Warehouse System</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -59,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <div class="container mt-5">
   <h2>เพิ่มซัพพลายเออร์</h2>
-  <form method="post" onsubmit="return confirm('คุณต้องการบันทึกข้อมูลใช่หรือไม่?');">
+  <form method="post" id="addSupplierForm">
     <div class="mb-3">
       <label class="form-label">ชื่อซัพพลายเออร์</label>
       <input type="text" name="supplier_name" class="form-control" required>
@@ -76,5 +82,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <a href="suppliers.php" class="btn btn-secondary">ยกเลิก</a>
   </form>
 </div>
+
+<script>
+    document.getElementById('addSupplierForm').addEventListener('submit', function(event) {
+        if (!confirm('คุณต้องการบันทึกข้อมูลซัพพลายเออร์นี้ใช่หรือไม่?')) {
+            event.preventDefault();
+        }
+    });
+</script>
+
 </body>
 </html>
