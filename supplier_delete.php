@@ -16,15 +16,15 @@ if (!isset($_GET['id'])) {
 
 $supplier_id = $_GET['id'];
 
-// ตรวจสอบว่าซัพพลายเออร์นี้ถูกใช้อยู่ในตาราง products หรือไม่
-$check = $conn->prepare("SELECT COUNT(*) AS total FROM products WHERE supplier_id = ?");
+// ตรวจสอบว่าซัพพลายเออร์นี้ถูกใช้อยู่ในตาราง `purchases` (บิลรับสินค้า) หรือไม่
+$check = $conn->prepare("SELECT COUNT(*) AS total FROM purchases WHERE supplier_id = ?");
 $check->bind_param("i", $supplier_id);
 $check->execute();
 $result = $check->get_result()->fetch_assoc();
 
 if ($result['total'] > 0) {
     echo "<script>
-            alert('ไม่สามารถลบซัพพลายเออร์นี้ได้ เนื่องจากมีสินค้าเชื่อมโยงอยู่');
+            alert('ไม่สามารถลบซัพพลายเออร์นี้ได้ เนื่องจากมีประวัติการซื้อสินค้าเชื่อมโยงอยู่');
             window.location='suppliers.php';
           </script>";
     exit();

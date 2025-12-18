@@ -2,13 +2,13 @@
 include 'connection.php';
 session_start();
 
-// ตรวจสอบการล็อกอิน
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// ถ้ามีการกด submit
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $category_name = $_POST['category_name'];
     $description = $_POST['description'];
@@ -40,10 +40,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         
 
- <!-- แถบเมนูด้านบน -->
+
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -52,9 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link active" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>       
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>      
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">บิลรับสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -80,9 +81,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <script>
     document.getElementById('addCategoryForm').addEventListener('submit', function(event) {
-        // แสดงกล่องข้อความยืนยัน
+
         if (!confirm('คุณต้องการบันทึกข้อมูลประเภทสินค้านี้ใช่หรือไม่?')) {
-            event.preventDefault(); // ถ้าผู้ใช้กด "Cancel" ให้ยกเลิกการส่งฟอร์ม
+            event.preventDefault(); 
         }
     });
 </script>

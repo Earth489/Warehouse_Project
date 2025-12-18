@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id'])) {
 $current_month_sales = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM sales WHERE DATE_FORMAT(sale_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
 
 // ยอดซื้อรวมของเดือนปัจจุบัน
-$current_month_purchases = $conn->query("SELECT IFNULL(SUM(total_amount), 0) AS total FROM purchases WHERE DATE_FORMAT(purchase_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
+$current_month_purchases = $conn->query("SELECT IFNULL(SUM(total_amount * 1.07), 0) AS total FROM purchases WHERE DATE_FORMAT(purchase_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")->fetch_assoc()['total'];
 
 // เดือนปัจจุบันสำหรับแสดงผล
 $thai_months = [
@@ -44,7 +44,7 @@ $current_month_thai = $thai_months[$current_month_number] . " " . $current_year_
   <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -53,9 +53,10 @@ $current_month_thai = $thai_months[$current_month_number] . " " . $current_year_
           <li class="nav-item"><a class="nav-link active" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>       
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>    
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">บิลรับสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -94,45 +95,27 @@ $current_month_thai = $thai_months[$current_month_number] . " " . $current_year_
         <tr>
           <th>ชื่อสินค้า</th>
           <th>จำนวนคงเหลือ</th>
-          <th>ซัพพลายเออร์</th>
         </tr>
       </thead>
       <tbody>
         <?php
-      // สมมติว่าตาราง products มีคอลัมน์ตามที่แนะนำไปแล้ว
-      // stock_in_sub_unit, base_unit, sub_unit, unit_conversion_rate
       $sql = "SELECT 
-                p.product_id, 
                 p.product_name, 
-                p.stock_in_sub_unit, 
-                p.reorder_level,
-                p.base_unit,
-                p.sub_unit,
-                p.unit_conversion_rate,
-                s.supplier_name
-              FROM products p -- เปลี่ยนจาก LEFT JOIN เป็น INNER JOIN
-              INNER JOIN suppliers s ON p.supplier_id = s.supplier_id
-              WHERE p.stock_in_sub_unit <= p.reorder_level AND p.supplier_id IS NOT NULL
-              ORDER BY p.stock_in_sub_unit ASC";
+                p.stock_quantity,
+                p.product_unit
+              FROM products p
+              WHERE 
+                p.stock_quantity <= p.reorder_level AND
+                EXISTS (SELECT 1 FROM purchase_details pd WHERE pd.product_id = p.product_id)
+              ORDER BY p.stock_quantity ASC";
 
       $result = $conn->query($sql);
 
       if ($result->num_rows > 0) {
           while ($row = $result->fetch_assoc()) {
-              $displayStock = '';
-              // แปลงสต็อกเป็นหน่วยที่เข้าใจง่าย
-              if ($row['unit_conversion_rate'] && $row['unit_conversion_rate'] > 1) {
-                  $baseUnitStock = floor($row['stock_in_sub_unit'] / $row['unit_conversion_rate']);
-                  $subUnitStock = fmod($row['stock_in_sub_unit'], $row['unit_conversion_rate']);
-                  $displayStock = "{$baseUnitStock} {$row['base_unit']} / {$subUnitStock} {$row['sub_unit']}";
-              } else {
-                  $displayStock = "{$row['stock_in_sub_unit']} {$row['base_unit']}";
-              }
-
               echo "<tr>                      
-                      <td>{$row['product_name']}</td>
-                      <td>{$displayStock}</td>
-                      <td>{$row['supplier_name']}</td>
+                      <td>" . htmlspecialchars($row['product_name']) . "</td>
+                      <td>" . number_format($row['stock_quantity'], 2) . " " . htmlspecialchars($row['product_unit']) . "</td>
                     </tr>";
           }
       } else {

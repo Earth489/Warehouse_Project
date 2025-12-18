@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 02, 2025 at 11:21 AM
+-- Generation Time: Dec 18, 2025 at 06:41 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -44,14 +44,11 @@ INSERT INTO `categories` (`category_id`, `category_name`, `description`) VALUES
 (12, 'วัสดุงานพื้น', 'กระเบื้องปูพื้น กระเบื้องยาง ยาแนวกระเบื้อง'),
 (13, 'วัสดุงานระบบไฟฟ้า', 'สายไฟฟ้า โคมไฟและหลอดไฟ กล่องสวิตช์และเต้ารับ เทปพันสายไฟ'),
 (14, 'วัสดุงานระบบประปา', 'ท่อPVC ท่อ CPVC น้ำยาประสานท่อ'),
-(15, 'อุปกรณ์ชั่วคราว ฯลฯ', 'บันไดพับ นั่งร้าน แบบหล่อคอนกรีต'),
-(16, 'เครื่องจักรหนัก', 'เครื่องตอก/เจาะเสาเข็ม'),
 (17, 'เครื่องมือช่าง', 'ไขควง ประแจ คีมปอกสายไฟ เครื่องมือวัดระยะ ล้อวัดระยะ เลื่อยชัก'),
 (18, 'เครื่องมือช่างไฟฟ้า', 'สว่าน เครื่องเจียร เลื่อยวงเดือน '),
 (22, 'อุปกรณ์ชั่วคราว ฯลฯ', 'บันไดพับ นั่งร้าน แบบหล่อคอนกรีต'),
 (23, 'เครื่องจักรหนัก', 'เครื่องตอก/เจาะเสาเข็ม'),
-(24, 'เครื่องมือช่าง', 'ไขควง ประแจ คีมปอกสายไฟ เครื่องมือวัดระยะ ล้อวัดระยะ เลื่อยชัก'),
-(25, 'เครื่องมือช่างไฟฟ้า', 'สว่าน เครื่องเจียร เลื่อยวงเดือน ');
+(26, 'สุขภัณฑ์', 'ชักโครก');
 
 -- --------------------------------------------------------
 
@@ -62,14 +59,11 @@ INSERT INTO `categories` (`category_id`, `category_name`, `description`) VALUES
 CREATE TABLE `products` (
   `product_id` int(11) NOT NULL,
   `product_name` varchar(150) NOT NULL,
+  `product_unit` varchar(50) NOT NULL,
   `category_id` int(11) DEFAULT NULL,
-  `supplier_id` int(11) DEFAULT NULL,
-  `base_unit` varchar(50) DEFAULT NULL,
-  `sub_unit` varchar(50) DEFAULT NULL,
-  `unit_conversion_rate` decimal(10,2) NOT NULL DEFAULT 1.00,
-  `stock_in_sub_unit` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `stock_quantity` int(11) DEFAULT 0,
   `selling_price` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `reorder_level` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `reorder_level` int(11) NOT NULL DEFAULT 0,
   `image_path` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -77,11 +71,67 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `supplier_id`, `base_unit`, `sub_unit`, `unit_conversion_rate`, `stock_in_sub_unit`, `selling_price`, `reorder_level`, `image_path`) VALUES
-(19, 'ซีเมนต์ฉาบบาง ภายใน สีขาว 20กก ลูกดิ่ง #เหลือง', 1, 3, 'ถุง', 'กิโลกรัม', 50.00, 150.00, 10.00, 40.00, 'uploads/prod_692e53a01afe96.44497067.png'),
-(22, 'ปูนมอร์ตาร์ 50 กก. เสืออีซี #ก่อ-เทสำเร็จ', 1, 1, 'ถุง', 'กิโลกรัม', 50.00, 498.00, 10.00, 40.00, 'uploads/prod_692e8d2829c144.21304341.png'),
-(23, 'ไขควงลองไฟ Champion #7700', 13, 1, 'อัน', NULL, 1.00, 50.00, 15.00, 20.00, 'uploads/prod_692e8d368c8f67.36825925.png'),
-(24, 'สีเคลือบเงา TOA #G100 14กล.- สีขาว', 8, 3, 'แกลลอน', NULL, 1.00, 10.00, 230.00, 10.00, 'uploads/prod_692ea65f4cc049.16606036.jpg');
+INSERT INTO `products` (`product_id`, `product_name`, `product_unit`, `category_id`, `stock_quantity`, `selling_price`, `reorder_level`, `image_path`) VALUES
+(19, 'ซีเมนต์ฉาบบาง ภายใน สีขาว 20กก ลูกดิ่ง #เหลือง', 'ถุง', 1, 31, 400.00, 10, 'uploads/prod_693133954d7653.24787530.png'),
+(23, 'ไขควงลองไฟ Champion #7700', 'อัน', 13, 50, 15.00, 20, 'uploads/prod_692e8d368c8f67.36825925.png'),
+(24, 'สีเคลือบเงา TOA #G100 14กล.- สีขาว', 'แกลลอน', 8, 10, 230.00, 10, 'uploads/prod_692ea65f4cc049.16606036.jpg'),
+(29, 'ปูนเกร้าท์ 621 สแตนดาร์ด 20กก. จระเข้', 'ถุง', 1, 30, 350.00, 10, 'uploads/prod_6930f24941f366.55791354.jpg'),
+(30, 'สีฝุ่น สีเขียว', 'ถุง', 22, 100, 20.00, 5, 'uploads/prod_6930f282dd0cc7.07067307.jpg'),
+(31, 'ปูนฉาบสำเร็จรูป TPI 5 กก. M200', 'ถุง', 1, 48, 45.00, 5, 'uploads/prod_6930ffb4bd6b97.35206346.png'),
+(32, 'ปูนมอร์ตาร์ 50 กก. เสืออีซี #ก่อ-เทสำเร็จ', '', 1, 49, 120.00, 10, 'uploads/prod_6930ffd1e11df6.65277735.png'),
+(33, 'ดินสอพองบด', '', 22, 47, 30.00, 10, 'uploads/prod_6930ffdb0e2794.01651870.jpg'),
+(35, 'สีฝุ่น สีดำ', '', 22, 120, 20.00, 10, 'uploads/prod_6930ff79d19014.69983198.jpg'),
+(36, 'สีฝุ่น สีเหลือง', '', 22, 100, 20.00, 10, 'uploads/prod_6930ff6f7270a6.04631164.jpg'),
+(37, 'สีฝุ่น สีแดง', '', 22, 100, 20.00, 10, 'uploads/prod_6930ff66d813e3.82963995.jpeg'),
+(38, 'ปูนฉาบยิปซั่ม 25กก.', '', 1, 50, 120.00, 10, 'uploads/prod_6930ff587a3c85.43570168.jpg'),
+(41, 'ปูนมอร์ตาร์ 50กก. เสือ #ฉาบสำเร็จ', '', 1, 30, 160.00, 10, 'uploads/prod_6930fecb534d47.31905080.jpg'),
+(42, 'ปูนคอนกรีตแห้งผสมเสร็จ (M402) 240 ksc. 50กก.', '', 1, 33, 150.00, 10, 'uploads/prod_6930febd326e25.02501696.png'),
+(43, 'ปูนมอร์ตาร์ 50กก. เสือ #เทปรับระดับ', '', 1, 40, 145.00, 10, 'uploads/prod_6930fe915797d5.38744281.jpg'),
+(44, 'ปูนกาว 20กก. ไฮเซ็ม #สมาร์ท', '', 1, 50, 140.00, 10, 'uploads/prod_6930fe8073f5a2.04577893.png'),
+(45, 'ปูนซีเมนต์ขาว 20กก. เสือ', '', 1, 50, 120.00, 10, 'uploads/prod_6930fe69e974e7.39861580.jpg'),
+(46, 'ปูนกาว 20กก. จระเข้ #แดง', '', 1, 50, 130.00, 10, 'uploads/prod_6930fe582fb1b6.66828558.png'),
+(47, 'ปูนกาว 20กก. จระเข้ #ทอง', '', 1, 40, 160.00, 10, 'uploads/prod_6930fe4f95c861.49035593.jpg'),
+(48, 'ปูนก่อมวลเบาสำเร็จ 40กก. จิงโจ้', '', 1, 35, 155.00, 10, 'uploads/prod_6930fe3cae9b85.51508681.jpg'),
+(49, 'ปูนฉาบมวลเบาสำเร็จ 40กก. ลูกดิ่ง #แดง', '', 1, 40, 150.00, 10, 'uploads/prod_6930fe3215f6f8.78839312.png'),
+(50, 'ปูนกาว 20กก. จระเข้ #เขียว', '', 1, 50, 130.00, 10, 'uploads/prod_6930fe24745479.05752247.jpg'),
+(51, 'ปูนขาว 3กก.', '', 1, 49, 20.00, 10, 'uploads/prod_6930fe15d708f3.55548030.jpg'),
+(52, 'ปูนกาว 20กก. ไฮเซ็ม #เอ็กเซลเพาเวอร์', '', 1, 40, 165.00, 10, 'uploads/prod_6930fe089506f5.30267698.png'),
+(53, 'ปูนนอนชริ้งค์เกราท์ Lanko 701 25 กก.', '', 1, 40, 135.00, 10, 'uploads/prod_6930fdbd7a2902.88076797.jpg'),
+(55, 'ปูนซ่อมแซมอเนกประสงค์ 2กก. ทีพีไอ #M600', '', 1, 500, 20.00, 5, 'uploads/prod_6930fd75cdb8b3.67238141.jpg'),
+(57, 'ท่อ PVC ชั้น 5 ขนาด 3นิ้ว', '', 14, 0, 100.00, 10, 'uploads/prod_6931011507e631.58588175.jpg'),
+(58, 'ข้องอ 90 บาง ข้าง 3นิ้ว', '', 14, 0, 7.00, 10, 'uploads/1764819148_ข้องอ 90 บาง ข้าง 3นิ้ว.jpg'),
+(59, 'ข้องอเกลียวใน 1/2\"', '', 14, 0, 5.00, 10, 'uploads/1764819209_ข้องอเกลียวใน 12.jpg'),
+(60, 'กระเบื้อง 8*8 ราคา 100 บาท', '', 12, 70, 100.00, 10, 'uploads/1764819386_กระเบื้อง 88 ราคา 100 บาท.jpg'),
+(61, 'กระเบื้อง 8*8 ราคา 140 บาท', '', 12, 100, 140.00, 10, 'uploads/prod_6931022bf3e5c9.16958267.jpg'),
+(62, 'สายไฟเดี่ยว 1x6 (50เมตร)', '', 13, 0, 50.00, 10, 'uploads/1764828799_สายไฟเดี่ยว 1x6 (50เมตร).png'),
+(63, 'หัวน็อตหกเหลี่ยม อลูมิเนียม (มิล) M6', '', 17, 0, 15.00, 20, 'uploads/1764832384_หัวน็อตหกเหลี่ยม อลูมิเนียม (มิล) M6.jpg'),
+(64, 'ปูนซีเมนต์ 50 กก. ช้าง # แดง', '', 1, 0, 20.00, 20, 'uploads/prod_6931364de98fe5.84576683.jpg'),
+(65, 'ปูนซีเมนต์ 40กก. เสือ #ซุปเปอร์', '', 1, 0, 20.00, 20, 'uploads/prod_693136e74f3fe5.00587558.jpg'),
+(66, 'ปูนซีเมนต์ 50กก. ทีพีไอ #เขียว', '', 1, 0, 20.00, 20, 'uploads/prod_693138b5b4e1a2.34591387.png'),
+(78, 'ซีเมนต์ฉาบบาง ภายใน สีขาว 20กก ลูกดิ่ง #เหลือง(ถุงเล็ก)', 'ถุง', 1, 16, 100.00, 10, 'uploads/prod_693133954d7653.24787530.png');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_split`
+--
+
+CREATE TABLE `product_split` (
+  `product_split_id` int(11) NOT NULL,
+  `parent_product_id` int(11) NOT NULL,
+  `parent_qty` int(11) NOT NULL,
+  `new_product_id` int(11) NOT NULL,
+  `new_qty` int(11) NOT NULL,
+  `split_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `user_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_split`
+--
+
+INSERT INTO `product_split` (`product_split_id`, `parent_product_id`, `parent_qty`, `new_product_id`, `new_qty`, `split_date`, `user_id`) VALUES
+(5, 19, 4, 78, 16, '2025-12-18 00:00:00', 1);
 
 -- --------------------------------------------------------
 
@@ -103,9 +153,16 @@ CREATE TABLE `purchases` (
 --
 
 INSERT INTO `purchases` (`purchase_id`, `purchase_number`, `user_id`, `supplier_id`, `purchase_date`, `total_amount`) VALUES
-(32, 'ฺBI68063293', 1, 3, '2025-12-01', 3500.00),
-(33, 'ST47856684', 1, 1, '2025-11-30', 4500.00),
-(34, 'ST12548965', 1, 3, '2025-12-02', 4000.00);
+(34, 'ST12548965', 1, 3, '2025-12-02', 4000.00),
+(35, 'AO12345678', 1, 4, '2025-12-04', 3400.00),
+(36, 'SK25468758', 1, 3, '2025-12-04', 7000.00),
+(37, 'FK54682458', 1, 1, '2025-12-04', 500.00),
+(38, 'GK15487652', 1, 1, '2025-12-04', 3000.00),
+(39, 'SL54875264', 1, 1, '2025-12-04', 15500.00),
+(45, 'AL15485164', 1, 1, '2025-12-04', 3000.00),
+(46, 'LD5484155', 1, 1, '2025-12-04', 340.00),
+(58, 'SK2558451555557', 1, 3, '2025-12-18', 100.00),
+(63, 'SK255845155444777', 1, 3, '2025-12-19', 5.00);
 
 -- --------------------------------------------------------
 
@@ -126,10 +183,23 @@ CREATE TABLE `purchase_details` (
 --
 
 INSERT INTO `purchase_details` (`purchase_detail_id`, `purchase_id`, `product_id`, `quantity`, `purchase_price`) VALUES
-(35, 32, 19, 10, 350.00),
-(36, 33, 22, 10, 400.00),
-(37, 33, 23, 50, 10.00),
-(38, 34, 24, 20, 200.00);
+(38, 34, 24, 20, 200.00),
+(39, 35, 60, 70, 20.00),
+(40, 35, 61, 100, 20.00),
+(41, 36, 19, 20, 350.00),
+(42, 37, 23, 50, 10.00),
+(43, 38, 35, 50, 15.00),
+(44, 38, 30, 50, 15.00),
+(45, 38, 36, 50, 15.00),
+(46, 38, 37, 50, 15.00),
+(47, 39, 29, 30, 300.00),
+(70, 45, 35, 50, 15.00),
+(71, 45, 30, 50, 15.00),
+(72, 45, 36, 50, 15.00),
+(73, 45, 37, 50, 15.00),
+(74, 46, 35, 20, 17.00),
+(98, 58, 19, 10, 10.00),
+(103, 63, 19, 1, 5.00);
 
 -- --------------------------------------------------------
 
@@ -149,8 +219,10 @@ CREATE TABLE `sales` (
 --
 
 INSERT INTO `sales` (`sale_id`, `user_id`, `sale_date`, `total_amount`) VALUES
-(25, 1, '2025-12-02', 520.00),
-(26, 1, '2025-12-02', 2300.00);
+(26, 1, '2025-12-02', 2300.00),
+(27, 1, '2025-12-04', 910.00),
+(28, 1, '2025-12-04', 510.00),
+(33, 1, '2025-12-19', 400.00);
 
 -- --------------------------------------------------------
 
@@ -172,9 +244,14 @@ CREATE TABLE `sale_details` (
 --
 
 INSERT INTO `sale_details` (`sale_detail_id`, `sale_id`, `product_id`, `quantity`, `sale_price`, `sale_unit`) VALUES
-(31, 25, 19, 1, 10.00, 'ถุง'),
-(32, 25, 22, 2, 10.00, 'กิโลกรัม'),
-(33, 26, 24, 10, 230.00, 'แกลลอน');
+(33, 26, 24, 10, 230.00, 'แกลลอน'),
+(34, 27, 31, 2, 45.00, 'ถุง'),
+(35, 27, 41, 5, 160.00, 'ถุง'),
+(36, 27, 51, 1, 20.00, 'ถุง'),
+(37, 28, 32, 1, 120.00, 'ถุง'),
+(38, 28, 42, 2, 150.00, 'ถุง'),
+(39, 28, 33, 3, 30.00, 'ถุง'),
+(48, 33, 19, 1, 400.00, 'ถุง');
 
 -- --------------------------------------------------------
 
@@ -186,17 +263,18 @@ CREATE TABLE `suppliers` (
   `supplier_id` int(11) NOT NULL,
   `supplier_name` varchar(150) NOT NULL,
   `address` varchar(255) DEFAULT NULL,
-  `phone` varchar(50) DEFAULT NULL
+  `phone` varchar(50) DEFAULT NULL,
+  `description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `suppliers`
 --
 
-INSERT INTO `suppliers` (`supplier_id`, `supplier_name`, `address`, `phone`) VALUES
-(1, 'บริษัท วิคตอรี่ สตีล อิมปอร์ต เอ็กซ์ปอร์ต จำกัด', '7 ซอยเพชรเกษม 57 แขวงหลักสอง เขตบางแค กรุงเทพ 10160', '024319629'),
-(3, 'บริษัท กรีนไลฟ์ เอ็นเตอร์ไฟรส์ จำกัด', '5 หมู่ที่ 4 ต.ท่าเสา อ.กระทุ่มแบน จ.สมุทรสาคร 74110', '034474008'),
-(4, 'ห้างหุ้นส่วนจำกัด ไทยวิวัฒน์สุขภัณฑ์', '1221/8-9 ถนนสุขุมวิท แขวงคลองตันเหนือ เขตวัฒนา กรุงเทพ 10110', '023917201');
+INSERT INTO `suppliers` (`supplier_id`, `supplier_name`, `address`, `phone`, `description`) VALUES
+(1, 'บริษัท วิคตอรี่ สตีล อิมปอร์ต เอ็กซ์ปอร์ต จำกัด', '7 ซอยเพชรเกษม 57 แขวงหลักสอง เขตบางแค กรุงเทพ 10160', '024319629', 'สินค้าวัสดุงานโครงสร้าง เครื่องจักรหนัก'),
+(3, 'บริษัท กรีนไลฟ์ เอ็นเตอร์ไฟรส์ จำกัด', '5 หมู่ที่ 4 ต.ท่าเสา อ.กระทุ่มแบน จ.สมุทรสาคร 74110', '034474008', 'สินค้าวัสดุงานระบบไฟฟ้า 	เครื่องมือช่างไฟฟ้า'),
+(4, 'ห้างหุ้นส่วนจำกัด ไทยวิวัฒน์สุขภัณฑ์', '1221/8-9 ถนนสุขุมวิท แขวงคลองตันเหนือ เขตวัฒนา กรุงเทพ 10110', '023917201', 'สินค้าวัสดุงานพื้น วัสดุงานผนัง');
 
 -- --------------------------------------------------------
 
@@ -216,7 +294,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`user_id`, `password`, `username`) VALUES
 (1, '1234', 'aniwat'),
-(4, '1234', 'earth');
+(4, '1234', 'earth'),
+(6, '1111', 'sasina');
 
 --
 -- Indexes for dumped tables
@@ -233,8 +312,13 @@ ALTER TABLE `categories`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`product_id`),
-  ADD KEY `category_id` (`category_id`),
-  ADD KEY `supplier_id` (`supplier_id`);
+  ADD KEY `category_id` (`category_id`);
+
+--
+-- Indexes for table `product_split`
+--
+ALTER TABLE `product_split`
+  ADD PRIMARY KEY (`product_split_id`);
 
 --
 -- Indexes for table `purchases`
@@ -287,49 +371,55 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+
+--
+-- AUTO_INCREMENT for table `product_split`
+--
+ALTER TABLE `product_split`
+  MODIFY `product_split_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `purchase_details`
 --
 ALTER TABLE `purchase_details`
-  MODIFY `purchase_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `purchase_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `sale_details`
 --
 ALTER TABLE `sale_details`
-  MODIFY `sale_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `sale_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- Constraints for dumped tables
@@ -339,8 +429,7 @@ ALTER TABLE `users`
 -- Constraints for table `products`
 --
 ALTER TABLE `products`
-  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`),
-  ADD CONSTRAINT `products_ibfk_2` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`);
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`);
 
 --
 -- Constraints for table `purchases`

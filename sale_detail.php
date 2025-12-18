@@ -27,7 +27,7 @@ if ($result_sale->num_rows == 0) {
 $sale = $result_sale->fetch_assoc();
 
 // ดึงรายละเอียดสินค้าในบิล
-$sql_detail = "SELECT sd.*, p.product_name, p.base_unit, p.unit_conversion_rate
+$sql_detail = "SELECT sd.quantity, sd.sale_price, sd.sale_unit, p.product_name
                FROM sale_details sd
                JOIN products p ON sd.product_id = p.product_id
                WHERE sd.sale_id = ?";
@@ -37,7 +37,7 @@ $stmt2->execute();
 $result_detail = $stmt2->get_result();
 
 // ✅ เพิ่ม Logic: ตรวจสอบหน่วยสินค้าในบิลเพื่อเปลี่ยนหัวตารางแบบไดนามิก
-$price_header = "ราคาขายต่อหน่วย"; // ค่าเริ่มต้น
+$price_header = "ราคาต่อหน่วย"; // ค่าเริ่มต้น
 $all_items = [];
 $all_units = []; 
 if ($result_detail->num_rows > 0) {
@@ -49,7 +49,7 @@ if ($result_detail->num_rows > 0) {
     $unique_units = array_unique($all_units); 
     if (count($unique_units) === 1) {
         // ถ้ามีหน่วยแค่แบบเดียวในบิลนี้
-        $price_header = "ราคาขายต่อ" . htmlspecialchars(reset($unique_units));
+        $price_header = "ราคาต่อ" . htmlspecialchars(reset($unique_units));
     }
 }
 ?>
@@ -76,7 +76,7 @@ if ($result_detail->num_rows > 0) {
 <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -85,9 +85,10 @@ if ($result_detail->num_rows > 0) {
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>     
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>     
+        <li class="nav-item"><a class="nav-link" href="warehouse_page.php">บิลรับสินค้า</a></li>
+        <li class="nav-item"><a class="nav-link active" href="warehouse_sale.php">บิลขายสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -109,50 +110,38 @@ if ($result_detail->num_rows > 0) {
         <thead class="table-light">
           <tr>
             <th>ชื่อสินค้า</th>
-            <th>จำนวน</th>
-            <th>หน่วย</th>
-            <th><?= $price_header ?></th>
-            <th>รวม</th>
+            <th class="text-end">จำนวน</th>
+            <th class="text-center">หน่วย</th>
+            <th class="text-end"><?= $price_header ?></th>
+            <th class="text-end">รวม</th>
           </tr>
         </thead>
         <tbody>
         <?php
         $total = 0;
-        foreach ($all_items as $row) { // วนลูปจาก array ที่เราเก็บไว้
-            // ✅ คำนวณราคารวมของแถวให้ถูกต้อง
-            $multiplier = 1;
-            if ($row['sale_unit'] == $row['base_unit'] && $row['unit_conversion_rate'] > 1) {
-                $multiplier = $row['unit_conversion_rate'];
-            }
-            $sum = $row['quantity'] * $row['sale_price'] * $multiplier;
-            $total += $sum;
-
-            // ✅ เพิ่ม Logic สำหรับแสดงราคาขายต่อหน่วยให้ถูกต้อง
-            $display_price = $row['sale_price']; // ราคาตั้งต้นคือราคาต่อหน่วยย่อย
-            if ($multiplier > 1) {
-                // ถ้าขายเป็นหน่วยหลัก (เช่น กระสอบ) ให้เอาราคาต่อหน่วยย่อยมาคูณกับอัตราแปลง
-                $display_price = $row['sale_price'] * $row['unit_conversion_rate'];
-            }
+        foreach ($all_items as $row) {
+            $row_total = $row['quantity'] * $row['sale_price'];
+            $total += $row_total;
 
             echo "<tr>
                     <td class='product-name-col'>" . htmlspecialchars($row['product_name']) . "</td>
-                    <td>{$row['quantity']}</td>
-                    <td>" . htmlspecialchars($row['sale_unit']) . "</td>
-                    <td>" . number_format($display_price, 2) . "</td>
-                    <td>" . number_format($sum, 2) . "</td>
+                    <td class='text-end'>" . number_format($row['quantity']) . "</td>
+                    <td class='text-center'>" . htmlspecialchars($row['sale_unit']) . "</td>
+                    <td class='text-end'>" . number_format($row['sale_price'], 2) . " ฿</td>
+                    <td class='text-end'>" . number_format($row_total, 2) . " ฿</td>
                   </tr>";
         }
         ?>
         </tbody>
         <tfoot>
-          <tr>
+          <tr class="table-light">
             <th colspan="4" class="text-end">รวมทั้งหมด</th>
-            <th><?= number_format($total, 2) ?></th>
+            <th class="text-end"><?= number_format($total, 2) ?> ฿</th>
           </tr>
         </tfoot>
       </table>
 
-      <a href="warehouse_page.php" class="btn btn-secondary mt-3 no-print">กลับ</a>
+      <a href="warehouse_sale.php" class="btn btn-secondary mt-3 no-print">กลับ</a>
       <button onclick="window.print()" class="btn btn-info mt-3 no-print">พิมพ์ใบเสร็จ</button>
     </div>
   </div>

@@ -35,10 +35,12 @@ if (isset($_POST['update'])) {
     $name = $_POST['supplier_name'];
     $address = $_POST['address'];
     $phone = $_POST['phone'];
+    $description = $_POST['description']; // รับค่า description
 
-    $sql_update = "UPDATE suppliers SET supplier_name = ?, address = ?, phone = ? WHERE supplier_id = ?";
+    // เพิ่ม description ในคำสั่ง SQL
+    $sql_update = "UPDATE suppliers SET supplier_name = ?, address = ?, phone = ?, description = ? WHERE supplier_id = ?";
     $stmt = $conn->prepare($sql_update);
-    $stmt->bind_param("sssi", $name, $address, $phone, $supplier_id);
+    $stmt->bind_param("ssssi", $name, $address, $phone, $description, $supplier_id);
 
     if ($stmt->execute()) {
         echo "<script>alert('อัปเดตข้อมูลเรียบร้อย'); window.location='suppliers.php';</script>";
@@ -66,7 +68,7 @@ if (isset($_POST['update'])) {
  <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -75,9 +77,10 @@ if (isset($_POST['update'])) {
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link active" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>    
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>      
+        <li class="nav-item"><a class="nav-link" href="warehouse_page.php">บิลรับสินค้า</a></li>
+        <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
           <li class="nav-item"><a class="nav-link " href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -103,6 +106,10 @@ if (isset($_POST['update'])) {
         <div class="mb-3">
           <label class="form-label">เบอร์โทร</label>
           <input type="text" name="phone" class="form-control" value="<?= $supplier['phone'] ?>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">รายละเอียด</label>
+          <textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($supplier['description'] ?? '') ?></textarea>
         </div>
         <button type="submit" name="update" class="btn btn-success">บันทึกการแก้ไข</button>
         <a href="suppliers.php" class="btn btn-secondary">ยกเลิก</a>

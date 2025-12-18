@@ -13,11 +13,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $supplier_name = $_POST['supplier_name'];
     $address = $_POST['address'];
     $phone = $_POST['phone'];
+    $description = $_POST['description']; // รับค่า description
 
-    $sql = "INSERT INTO suppliers (supplier_name, address, phone) 
-            VALUES ('$supplier_name', '$address', '$phone')";
+    // ใช้ Prepared Statements เพื่อป้องกัน SQL Injection
+    $stmt = $conn->prepare("INSERT INTO suppliers (supplier_name, address, phone, description) VALUES (?, ?, ?, ?)");
+    if ($stmt === false) {
+        die("เกิดข้อผิดพลาดในการเตรียมคำสั่ง: " . $conn->error);
+    }
+    $stmt->bind_param("ssss", $supplier_name, $address, $phone, $description);
 
-    if ($conn->query($sql) === TRUE) {
+    if ($stmt->execute()) {
         header("Location: suppliers.php");
         exit();
     } else {
@@ -44,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -53,9 +58,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link active" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>           
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">บิลรับสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -77,6 +83,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="mb-3">
       <label class="form-label">เบอร์โทร</label>
       <input type="text" name="phone" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">รายละเอียด</label>
+      <textarea name="description" class="form-control" rows="3"></textarea>
     </div>
     <button type="submit" class="btn btn-success">บันทึก</button>
     <a href="suppliers.php" class="btn btn-secondary">ยกเลิก</a>

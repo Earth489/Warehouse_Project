@@ -29,7 +29,7 @@ $headerResult = $stmt->get_result();
 $purchase = $headerResult->fetch_assoc();
 
 // ดึงรายละเอียดสินค้าในบิล
-$sqlItems = "SELECT d.product_id, pr.product_name, pr.base_unit, d.quantity, d.purchase_price, 
+$sqlItems = "SELECT d.product_id, pr.product_name, pr.product_unit, d.quantity, d.purchase_price, 
                     (d.quantity * d.purchase_price) AS total
              FROM purchase_details d
              LEFT JOIN products pr ON d.product_id = pr.product_id
@@ -46,8 +46,8 @@ $all_units = [];
 if ($itemsResult->num_rows > 0) {
     while($item = $itemsResult->fetch_assoc()) {
         $all_items[] = $item; // เก็บข้อมูลทั้งหมดไว้ใน array
-        if (!empty($item['base_unit'])) {
-            $all_units[] = $item['base_unit']; // เก็บเฉพาะหน่วย
+        if (!empty($item['product_unit'])) {
+            $all_units[] = $item['product_unit']; // เก็บเฉพาะหน่วย
         }
     }
     $unique_units = array_unique($all_units); 
@@ -87,7 +87,7 @@ body {
 <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -96,9 +96,10 @@ body {
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>       
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>   
+          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">บิลรับสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -129,7 +130,8 @@ body {
               <th>จำนวน</th>
               <th>หน่วยนับ</th>
               <th><?= $price_header ?></th>
-              <th>ราคารวม</th>
+              <th class="text-end">ราคารวม</th>
+              <th class="text-end">ราคารวม (+VAT 7%)</th>
             </tr>
           </thead>
           <tbody>
@@ -137,14 +139,15 @@ body {
               <?php foreach ($all_items as $item): ?>
                 <tr>
                   <td class="product-name-col"><?= htmlspecialchars($item['product_name']) ?></td>
-                  <td><?= number_format($item['quantity'], 0) ?></td>
-                  <td><?= htmlspecialchars($item['base_unit']) ?></td>
-                  <td><?= number_format($item['purchase_price'], 2) ?></td>
-                  <td><?= number_format($item['total'], 2) ?></td>
+                  <td class="text-end"><?= number_format($item['quantity'], 0) ?></td>
+                  <td class="text-center"><?= htmlspecialchars($item['product_unit']) ?></td>
+                  <td class="text-end"><?= number_format($item['purchase_price'], 2) ?> ฿</td>
+                  <td class="text-end"><?= number_format($item['total'], 2) ?> ฿</td>
+                  <td class="text-end fw-bold"><?= number_format($item['total'] * 1.07, 2) ?> ฿</td>
                 </tr>
               <?php endforeach; ?>
             <?php else: ?>
-              <tr><td colspan="5" class="text-center text-muted">ไม่มีรายการสินค้าในบิลนี้</td></tr>
+              <tr><td colspan="6" class="text-center text-muted">ไม่มีรายการสินค้าในบิลนี้</td></tr>
             <?php endif; ?>
           </tbody>
         </table>

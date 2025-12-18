@@ -16,8 +16,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="login.css">
     <title>เข้าสู่ระบบ</title>
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #827d9e;
+    }
+
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+    }
+</style>
 </head>
 <body> 
+    <header class="bg-dark text-white py-3 w-100">
+    <h2 class="text-center m-0">
+        ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง
+    </h2>
+    </header>
         <form action="Login.php" method="POST">
         <?php 
         
@@ -49,8 +69,7 @@
 
                 // ⚠️ ควรใช้ password_verify() ถ้าคุณมีการแฮชรหัสผ่านใน DB
                 if($password_input === $user_data['password']) {
-                //if (password_verify($password_input, $user_data['password'])) { // ถ้าใช้ Hashed Password
-
+            
                     // 5. ลบเงื่อนไขการตรวจสอบประเภทผู้ใช้ออก (ทำให้ล็อกอินแล้วเด้งไปหน้าอื่นได้)
                     
                     $_SESSION['username'] = $user_data["username"];
@@ -75,16 +94,17 @@
 
         <h1 class="mb-4">เข้าสู่ระบบ</h1>
         <div class="mb-3 text-start">
-            <label for="username" class="form-label">Username</label>
-            <input type="username" name="username" id="username" placeholder="Username" class="form-control">
+            <label for="username" class="form-label">ชื่อผู้ใช้</label>
+            <input type="username" name="username" id="username" placeholder="ชื่อผู้ใช้" class="form-control">
         </div>
         <div class="mb-3 text-start">
             <label for="pws" class="form-label">รหัสผ่าน</label>
-            <input type="password" name="pws" id="pws" placeholder="Password" class="form-control">
+            <input type="password" name="pws" id="pws" placeholder="รหัสผ่าน" class="form-control">
         </div>
         
         <button type="submit" name="enter" class="btn-login">เข้าสู่ระบบ</button>
         <div class="divider"></div>
     </form>
+    </div>
 </body>
 </html>

@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 $uid = $_SESSION['user_id'];
 
 // ดึงสินค้า
-$sqlProducts = "SELECT p.product_id, p.product_name, p.base_unit, p.sub_unit, p.unit_conversion_rate,
+$sqlProducts = "SELECT p.product_id, p.product_name, p.product_unit,
                        IFNULL(c.category_name,'-') AS category_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.category_id
@@ -35,6 +35,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($supplier_id <= 0) $errors[] = "กรุณาเลือกผู้จำหน่าย";
     if (count($product_ids) == 0) $errors[] = "กรุณาเลือกสินค้าอย่างน้อย 1 รายการ";
 
+    // --- เพิ่มการตรวจสอบเลขที่บิลซ้ำ ---
+    if (empty($errors)) {
+        $check_stmt = $conn->prepare("SELECT purchase_id FROM purchases WHERE purchase_number = ?");
+        $check_stmt->bind_param("s", $purchase_number);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+        if ($check_stmt->num_rows > 0) {
+            $errors[] = "เลขที่บิล '$purchase_number' นี้มีอยู่ในระบบแล้ว";
+        }
+        $check_stmt->close();
+    }
+
     $items = [];
     for ($i=0; $i<count($product_ids); $i++) {
         $pid = (int)$product_ids[$i];
@@ -57,48 +69,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ins->execute();
             $purchase_id = $ins->insert_id;
             $ins->close();
-            
-            // เตรียม PreparedStatement สำหรับการบันทึกรายละเอียดการซื้อ
+
+            // เตรียม Statement สำหรับบันทึกรายละเอียดและอัปเดตสต็อก
             $insDet = $conn->prepare("INSERT INTO purchase_details (purchase_id, product_id, quantity, purchase_price) VALUES (?, ?, ?, ?)");
-            
-            // เตรียม PreparedStatement สำหรับดึงข้อมูล supplier_id ปัจจุบันของสินค้า
-            $getProdSupplier = $conn->prepare("SELECT supplier_id, product_name FROM products WHERE product_id = ?");
-            
-            // เตรียม PreparedStatement สำหรับอัปเดต stock_qty และ supplier_id
-            $updStockAndSupplier = $conn->prepare("UPDATE products SET stock_in_sub_unit = stock_in_sub_unit + ?, supplier_id = ? WHERE product_id = ?");
-            
-            // เตรียม PreparedStatement สำหรับอัปเดต stock_qty เท่านั้น
-            $updStockOnly = $conn->prepare("UPDATE products SET stock_in_sub_unit = stock_in_sub_unit + ? WHERE product_id = ?");
+            $updStock = $conn->prepare("UPDATE products SET stock_quantity = stock_quantity + ? WHERE product_id = ?");
 
             foreach ($items as $it) {
-                // 1. ดึงข้อมูลสินค้าเพื่อคำนวณสต็อก
-                $prod_info_stmt = $conn->prepare("SELECT unit_conversion_rate, supplier_id FROM products WHERE product_id = ?");
-                $prod_info_stmt->bind_param("i", $it['product_id']);
-                $prod_info_stmt->execute();
-                $prod_info = $prod_info_stmt->get_result()->fetch_assoc();
-                $conv_rate = $prod_info['unit_conversion_rate'];
-                $current_product_supplier_id = $prod_info['supplier_id'];
-
-                // คำนวณจำนวนที่จะเพิ่มในหน่วยย่อย
-                $qty_to_add_in_sub_unit = $it['qty'] * $conv_rate;
-
-                if ($current_product_supplier_id === NULL) {
-                    $updStockAndSupplier->bind_param("dii", $qty_to_add_in_sub_unit, $supplier_id, $it['product_id']);
-                    $updStockAndSupplier->execute();
-                } elseif ($current_product_supplier_id == $supplier_id) {
-                    $updStockOnly->bind_param("di", $qty_to_add_in_sub_unit, $it['product_id']);
-                    $updStockOnly->execute(); 
-                } else {
-                    // กรณีที่ 2b: สินค้ามี supplier_id อยู่แล้วแต่ไม่ตรงกับที่เลือก ให้ยกเลิกและแจ้งเตือน
-                    throw new Exception("ไม่สามารถเพิ่ม " . htmlspecialchars($product_name_for_error) . " ได้ เพราะสินค้านี้ผูกกับ Supplier เดิม");
-                }
-
                 // บันทึกรายละเอียดการซื้อ
                 $insDet->bind_param("iiid", $purchase_id, $it['product_id'], $it['qty'], $it['price']);
                 $insDet->execute();
+
+                // อัปเดตสต็อกสินค้า
+                $updStock->bind_param("di", $it['qty'], $it['product_id']);
+                $updStock->execute();
             }
+            // ปิด statement หลังใช้งานเสร็จ
             $insDet->close();
-            $getProdSupplier->close();
+            $updStock->close();
             $conn->commit();
 
             header("Location: warehouse_page.php?msg=stockin_ok");
@@ -116,13 +103,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="utf-8">
 <title>รับสินค้าเข้าคลัง</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<style>
+  /* ปรับแก้ให้ select2 แสดงผลได้ถูกต้องในตาราง */
+  .select2-container--bootstrap-5 .select2-selection { padding: 0.375rem 0.75rem; height: calc(2.4375rem + 2px); }
+</style>
 </head>
 <body>
 
-<!-- แถบเมนูด้านบน -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+ <!-- แถบเมนูด้านบน -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -131,10 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
-          <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>     
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>     
+        <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">บิลรับสินค้า</a></li>
+        <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link " href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
       </div>
@@ -156,12 +151,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="col-md-4">
   <label class="form-label">วันที่รับสินค้า</label>
-  <input type="date" name="purchase_date" class="form-control" required>
+  <input type="date" name="purchase_date" class="form-control" value="" required>
   </div>
       <div class="col-md-4">
         <label class="form-label">ซัพพลายเออร์</label>
         <select name="supplier_id" class="form-select" required>
-          <option value="">-- เลือก --</option>
+          <option value=""> เลือก </option>
           <?php while($s=$supRes->fetch_assoc()): ?>
             <option value="<?=$s['supplier_id']?>"><?=$s['supplier_name']?></option>
           <?php endwhile; ?>
@@ -169,27 +164,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
 
-    <table class="table table-bordered">
+    <table class="table table-bordered" style="table-layout: fixed;">
       <thead class="table-dark text-center">
         <tr>
-          <th>สินค้า</th>
-          <th>ประเภท</th>
-          <th>หน่วยที่รับ (หน่วยหลัก)</th>
-          <th>ราคาซื้อ (ต่อหน่วยหลัก)</th>
-          <th>จำนวน (หน่วยหลัก)</th>
-          <th>ราคารวม</th>
-          <th></th>
+          <th style="width: 35%;">สินค้า</th>
+          <th style="width: 15%;">ประเภท</th>
+          <th style="width: 10%;">หน่วย</th>
+          <th style="width: 12%;">ราคาซื้อ</th>
+          <th style="width: 10%;">จำนวน</th>
+          <th style="width: 13%;">ราคารวม</th>
+          <th style="width: 13%;">ราคารวม (รวม VAT)</th>
+          <th style="width: 5%;"></th>
         </tr>
       </thead>
       <tbody id="itemBody">
         <tr>
           <td>
-            <select name="product[]" class="form-select" required>
-              <option value="">-- เลือกสินค้า --</option>
+            <select name="product[]" class="form-select product-select" required>
+              <option value=""> เลือกสินค้า </option>
               <?php foreach($products as $p): ?>
                 <option value="<?=$p['product_id']?>"
-                        data-cat="<?=$p['category_name']?>"
-                        data-unit="<?=htmlspecialchars($p['base_unit'])?>">
+                        data-cat="<?=htmlspecialchars($p['category_name'])?>"
+                        data-unit="<?=htmlspecialchars($p['product_unit'])?>">
                   <?=$p['product_name']?>
                 </option>
               <?php endforeach; ?>
@@ -200,6 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <td><input type="number" step="0.01" name="purchase_price[]" class="form-control text-end" required></td>
           <td><input type="number" name="quantity[]" class="form-control text-center" min="1" required></td>
           <td><input type="text" class="form-control text-end row-total" readonly></td>
+          <td><input type="text" class="form-control text-end row-total-vat" readonly></td>
           <td><button type="button" class="btn btn-danger btn-remove">-</button></td>
         </tr>
       </tbody>
@@ -215,74 +212,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p>ราคารวมทั้งหมด: <span id="totalAmount">0.00</span> บาท</p>
         </div>
   </form>
-</div>
+</div> 
+<!-- jQuery (จำเป็นสำหรับ Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <!-- สคริปต์ JavaScript -->
 <script>
-document.querySelectorAll('select[name="product[]"]').forEach(sel=>{
-  sel.addEventListener('change',function(){
-    const opt=this.options[this.selectedIndex];
-    const tr=this.closest('tr');
-    tr.querySelector('.cat').value=opt.dataset.cat||'';
-    tr.querySelector('.unit').value=opt.dataset.unit||'';
-  });
-});
 
-document.getElementById('btnAdd').addEventListener('click',()=>{
-  const tb=document.querySelector('#itemBody');
-  const row=tb.children[0].cloneNode(true);
-  row.querySelectorAll('input').forEach(i=>i.value='');
-  row.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
-  tb.appendChild(row);
-  row.querySelector('select').addEventListener('change',function(){
-    const opt=this.options[this.selectedIndex];
-    const tr=this.closest('tr');
-    tr.querySelector('.cat').value=opt.dataset.cat||'';
-    tr.querySelector('.unit').value=opt.dataset.unit||'';
-  });
-  row.querySelector('.btn-remove').addEventListener('click',()=>row.remove());
-  
-  // เพิ่ม event listener ให้กับแถวใหม่
-  row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]').forEach(input => {
-      input.addEventListener('input', () => updateRowAndTotals(row));
-  });
+// เก็บ HTML ของแถวแรกไว้เป็นต้นแบบ (template) ก่อนที่จะถูก Select2 แปลง
+const rowTemplate = document.getElementById('itemBody').querySelector('tr').cloneNode(true);
 
-  // เพิ่ม event listener ให้กับแถวใหม่ (เรียก updateTotals แทน)
-  row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]').forEach(input => {
-      input.addEventListener('input', () => updateRowAndTotals(row));
-  });
-    // เรียกใช้งานฟังก์ชัน updateTotals หลังจากเพิ่มแถวใหม่
-    updateTotals();
-});
+function initializeSelect2(element) {
+    $(element).select2({
+        theme: 'bootstrap-5',
+        width: '100%'
+    }).on('select2:select', function (e) {
+        // เมื่อมีการเลือก item ให้ trigger event 'change' ของ DOM เดิม
+        // เพื่อให้โค้ดเก่าที่ดัก 'change' event ทำงานได้
+        e.target.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+}
 
-document.querySelectorAll('.btn-remove').forEach(b=>b.addEventListener('click',()=>b.closest('tr').remove()));
+function addRowListeners(row) {
+    const productSelect = row.querySelector('.product-select');
+    // 2. ผูก Event เดิมสำหรับ Auto-fill
+    productSelect.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        const tr = this.closest('tr');
+        tr.querySelector('.cat').value = opt.dataset.cat || '';
+        tr.querySelector('.unit').value = opt.dataset.unit || '';
+    });
 
-// ฟังก์ชันอัปเดต ราคารวม ของแต่ละแถว และ ราคารวมทั้งหมด
-function updateRowAndTotals(row) {
-    calculateTotal(row); // คำนวณราคารวมของแถว
-    updateTotals(); // อัปเดตผลรวมทั้งหมด
+    // 3. ผูก Event สำหรับการคำนวณ
+    const inputs = row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]');
+    inputs.forEach(input => {
+        input.addEventListener('input', updateTotals);
+    });
+
+    // 4. ผูก Event ปุ่มลบ
+    const removeBtn = row.querySelector('.btn-remove');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            if (document.querySelectorAll('#itemBody tr').length > 1) {
+                row.remove();
+                updateTotals(); // คำนวณใหม่หลังลบแถว
+            } else {
+                alert('ไม่สามารถลบแถวสุดท้ายได้');
+            }
+        });
+    }
 }
 
 
+// ปุ่มเพิ่มแถว
+document.getElementById('btnAdd').addEventListener('click', () => {
+    const tbody = document.getElementById('itemBody');
+    const newRow = rowTemplate.cloneNode(true);
+    
+    // ล้างค่าในแถวใหม่
+    newRow.querySelectorAll('input').forEach(input => input.value = '');
+    newRow.querySelector('.product-select').selectedIndex = 0;
 
-// ฟังก์ชันคำนวณราคารวม
-function calculateTotal(row) {
-    const price = parseFloat(row.querySelector('input[name="purchase_price[]"]').value) || 0;
-    const quantity = parseInt(row.querySelector('input[name="quantity[]"]').value) || 0;
-    const total = price * quantity;
-    // อัปเดตช่องราคารวมของแถว
-    row.querySelector('.row-total').value = total.toFixed(2);
-    return total;
-}
+    tbody.appendChild(newRow);
+    addRowListeners(newRow);
+    initializeSelect2(newRow.querySelector('.product-select'));
 
-// ฟังก์ชันอัปเดตผลรวมทั้งหมด
-function updateTotals() {
+    updateTotals(); // ⭐ บรรทัดนี้คือคำตอบ
+});
+
+// ฟังก์ชันอัปเดตผลรวมทั้งหมด (ราคารวม, VAT, ยอดสุทธิ)
+function updateTotals() { 
     let subtotal = 0;
     document.querySelectorAll('#itemBody tr').forEach(row => {
         const price = parseFloat(row.querySelector('input[name="purchase_price[]"]').value) || 0;
         const quantity = parseInt(row.querySelector('input[name="quantity[]"]').value) || 0;
-        const rowTotal = price * quantity;
-        row.querySelector('.row-total').value = rowTotal.toFixed(2);
-        subtotal += rowTotal;
+        const rowTotalBeforeVat = price * quantity;
+        const rowTotalWithVat = rowTotalBeforeVat * 1.07;
+
+        // อัปเดตช่องราคารวม (ก่อน VAT) ของแถว
+        const rowTotalInput = row.querySelector('.row-total');
+        if (rowTotalInput) rowTotalInput.value = rowTotalBeforeVat.toFixed(2);
+
+        // อัปเดตช่องราคารวม (รวม VAT) ของแถว
+        const rowTotalVatInput = row.querySelector('.row-total-vat');
+        if (rowTotalVatInput) rowTotalVatInput.value = rowTotalWithVat.toFixed(2);
+
+        subtotal += rowTotalBeforeVat;
     });
 
     const vat = subtotal * 0.07;
@@ -293,18 +312,12 @@ function updateTotals() {
     document.getElementById('totalAmount').textContent = total.toFixed(2);
 }
 
-// เพิ่ม event listener สำหรับการเปลี่ยนแปลงใน input
-function addRowListeners(row) {
-    const inputs = row.querySelectorAll('input[name="purchase_price[]"], input[name="quantity[]"]');
-    inputs.forEach(input => {
-        input.addEventListener('input', updateTotals);
-    });
-}
-
-// เพิ่ม listeners ให้กับแถวที่มีอยู่แล้ว
-document.querySelectorAll('#itemBody tr').forEach(addRowListeners);
-
-updateTotals(); // เรียกใช้ฟังก์ชัน updateTotals เพื่อคำนวณผลรวมเริ่มต้น
+// --- ส่วนที่รันเมื่อหน้าเว็บโหลดเสร็จ ---
+$(document).ready(function() {
+    document.querySelectorAll('#itemBody tr').forEach(addRowListeners);
+    initializeSelect2(document.querySelector('.product-select')); // ทำให้แถวแรกค้นหาได้
+    updateTotals(); // คำนวณผลรวมเริ่มต้น
+});
 
 </script>
 </body>

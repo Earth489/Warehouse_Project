@@ -7,55 +7,47 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// ดึงข้อมูลซัพพลายเออร์สำหรับ dropdown
-$suppliers_result = $conn->query("SELECT supplier_id, supplier_name FROM suppliers ORDER BY supplier_name ASC");
-
-// รับค่าจากฟอร์มค้นหา
+// รับค่าค้นหา
 $start_date = $_GET['start_date'] ?? '';
 $end_date   = $_GET['end_date'] ?? '';
-$supplier_id = $_GET['supplier_id'] ?? ''; // เปลี่ยนจาก search_term
-
+$search_term = $_GET['search_term'] ?? '';
 
 $params = [];
 $types = "";
 
 // ------------------------
-//   SQL บิลซื้อเท่านั้น
+//    SQL บิลขายเท่านั้น
 // ------------------------
 $sql = "
     SELECT 
-        p.purchase_id AS bill_id,
-        p.purchase_number AS bill_number,
-        p.purchase_date AS bill_date,
-        p.total_amount,
-        s.supplier_name AS party_name
-    FROM purchases p
-    LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+        s.sale_id AS bill_id,
+        s.sale_id AS bill_number,
+        s.sale_date AS bill_date,
+        s.total_amount,
+        'ลูกค้าทั่วไป' AS party_name
+    FROM sales s
     WHERE 1=1
 ";
 
-// เพิ่มเงื่อนไขค้นหา
 if ($start_date) {
-    $sql .= " AND p.purchase_date >= ?";
+    $sql .= " AND s.sale_date >= ?";
     $params[] = $start_date;
     $types .= "s";
 }
-
 if ($end_date) {
-    $sql .= " AND p.purchase_date <= ?";
+    $sql .= " AND s.sale_date <= ?";
     $params[] = $end_date;
     $types .= "s";
 }
-
-if ($supplier_id) {
-    $sql .= " AND p.supplier_id = ?";
-    $params[] = $supplier_id;
-    $types .= "i";
+if ($search_term) {
+    $sql .= " AND (s.sale_id LIKE ?)";
+    $like = "%".$search_term."%";
+    $params[] = $like;
+    $types .= "s";
 }
 
 $sql .= " ORDER BY bill_date DESC, bill_id DESC";
 
-// execute
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
@@ -63,15 +55,14 @@ if (!empty($params)) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// คำนวณยอดรวม
-$total_in = 0;
-$bills_in = [];
+// เตรียมข้อมูล
+$total_out = 0;
+$bills_out = [];
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $bills_in[] = $row;
-        // เพิ่ม VAT 7% เข้าไปในยอดรวม
-        $total_in += $row['total_amount'] * 1.07;
+        $bills_out[] = $row;
+        $total_out += $row['total_amount'];
     }
 }
 
@@ -81,7 +72,7 @@ $stmt->close();
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>บิลรับสินค้า</title>
+<title>บิลขายสินค้า</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
@@ -101,8 +92,8 @@ $stmt->close();
         <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
         <li class="nav-item"><a class="nav-link" href="products.php">สินค้า</a></li>
         <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>
-        <li class="nav-item"><a class="nav-link active" href="warehouse_page.php">บิลรับสินค้า</a></li>
-        <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
+        <li class="nav-item"><a class="nav-link" href="warehouse_page.php">บิลรับสินค้า</a></li>
+        <li class="nav-item"><a class="nav-link active" href="warehouse_sale.php">บิลขายสินค้า</a></li>
         <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
         <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
       </ul>
@@ -111,74 +102,70 @@ $stmt->close();
 </nav>
 
 <div class="container mt-4 mb-5">
-  <h2 class="fw-bold mb-3">บิลรับสินค้า</h2>
+  <h2 class="fw-bold mb-3">บิลขายสินค้า</h2>
 
   <!-- ฟอร์มค้นหา -->
   <form method="GET" class="card card-body mb-4">
     <div class="row g-3 align-items-end">
+
       <div class="col-md-3">
         <label class="form-label">จากวันที่</label>
-        <input type="date" name="start_date" class="form-control" 
+        <input type="date" name="start_date" class="form-control"
                value="<?= htmlspecialchars($start_date) ?>">
       </div>
+
       <div class="col-md-3">
         <label class="form-label">ถึงวันที่</label>
-        <input type="date" name="end_date" class="form-control" 
+        <input type="date" name="end_date" class="form-control"
                value="<?= htmlspecialchars($end_date) ?>">
       </div>
+
       <div class="col-md-3">
-        <label class="form-label">ซัพพลายเออร์</label>
-        <select name="supplier_id" class="form-select">
-            <option value=""> เลือกซัพพลายเออร์ </option>
-            <?php mysqli_data_seek($suppliers_result, 0); ?>
-            <?php while($s = $suppliers_result->fetch_assoc()): ?>
-                <option value="<?= $s['supplier_id'] ?>" <?= ($supplier_id == $s['supplier_id']) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($s['supplier_name']) ?>
-                </option>
-            <?php endwhile; ?>
-        </select>
+        <label class="form-label">เลขที่บิล</label>
+        <input type="text" name="search_term" class="form-control"
+               placeholder="ค้นหา..." value="<?= htmlspecialchars($search_term) ?>">
       </div>
+
       <div class="col-md-3 d-flex gap-2">
-        <button class="btn btn-primary flex-grow-1 " type="submit">ค้นหา</button>
-        <a href="warehouse_page.php" class="btn btn-secondary d-flex align-items-center justify-content-center" title="ล้างการค้นหา" style="width: 45px;"><i class="bi bi-arrow-counterclockwise"></i></a>
+        <button class="btn btn-primary flex-grow-1" type="submit">ค้นหา</button>
+         <a href="warehouse_sale.php" class="btn btn-secondary d-flex align-items-center justify-content-center" title="ล้างการค้นหา" style="width: 45px;"><i class="bi bi-arrow-counterclockwise"></i></a>
       </div>
+
     </div>
   </form>
 
-  <a href="stock_in_add.php" class="btn btn-success mb-3">เพิ่มบิลรับสินค้า</a>
+  <!-- ปุ่มเพิ่มบิล -->
+  <a href="stock_out_add.php" class="btn btn-danger mb-3">เพิ่มบิลขายสินค้า</a>
 
-  <!-- ตาราง -->
+  <!-- ตารางบิลขาย -->
   <table class="table table-bordered table-striped">
     <thead class="table-dark">
       <tr>
-        <th class ="text-center" >วันที่</th>
-        <th class="text-center">เลขที่บิล</th>
-        <th class="text-center">ซัพพลายเออร์</th>
-        <th class="text-center">ยอดรวม (บาท)</th>
+        <th class = "text-center">วันที่</th>
+        <th class = "text-center">เลขที่บิล</th>
+        <th class= "text-center">ยอดรวม (บาท)</th>
         <th class="text-center">จัดการ</th>
       </tr>
     </thead>
 
     <tbody>
-      <?php if (!empty($bills_in)): ?>
-        <?php foreach ($bills_in as $row): ?>
+      <?php if (!empty($bills_out)): ?>
+        <?php foreach ($bills_out as $row): ?>
         <tr>
           <td><?= date("d/m/Y", strtotime($row['bill_date'])) ?></td>
-          <td><?= htmlspecialchars($row['bill_number']) ?></td>
-          <td><?= htmlspecialchars($row['party_name']) ?></td>
-          <td class="text-end"><?= number_format($row['total_amount'] * 1.07, 2) ?></td>
+          <td class="text-end"><?= htmlspecialchars($row['bill_number']) ?></td>
+          <td class="text-end"><?= number_format($row['total_amount'], 2) ?></td>
           <td class="text-center">
-            <a href="purchase_detail.php?id=<?= $row['bill_id'] ?>"
+            <a href="sale_detail.php?sale_id=<?= $row['bill_id'] ?>"
                class="btn btn-sm btn-info">ดูรายละเอียด</a>
           </td>
         </tr>
         <?php endforeach; ?>
       <?php else: ?>
-        <tr><td colspan="5" class="text-center text-muted">ไม่พบข้อมูล</td></tr>
+        <tr><td colspan="4" class="text-center text-muted">ไม่พบข้อมูล</td></tr>
       <?php endif; ?>
     </tbody>
 
-    
   </table>
 
 </div>

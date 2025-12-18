@@ -55,22 +55,13 @@ $categories = $conn->query("SELECT * FROM categories");
 if (isset($_POST['update'])) {
     $name = trim($_POST['product_name']);
     $category_id = (int)$_POST['category_id'];
-    $base_unit = trim($_POST['base_unit']);
-    $sub_unit = !empty($_POST['sub_unit']) ? trim($_POST['sub_unit']) : null;
-    $unit_conversion_rate = (float)$_POST['unit_conversion_rate'];
+    $product_unit = trim($_POST['product_unit']); // เปลี่ยนเป็น product_unit
     $price = (float)$_POST['selling_price'];
     $reorder = (int)$_POST['reorder_level'];
 
-    // [แก้ไข Logic] คำนวณต้นทุนต่อหน่วยย่อยใหม่ โดยใช้อัตราส่วนจากฟอร์ม (ค่าปัจจุบัน)
-    $current_cost_per_sub = $latest_purchase_price;
-    if ($unit_conversion_rate > 1) {
-        $current_cost_per_sub = $latest_purchase_price / $unit_conversion_rate;
-    }
-
-    // Validation: ราคาขายต้องไม่ต่ำกว่าทุน (ต่อหน่วยย่อยที่คำนวณใหม่)
-    // ใช้ bccomp หรือการเปรียบเทียบแบบเผื่อทศนิยมเล็กน้อยป้องกัน floating point error
-    if ($price < $current_cost_per_sub) {
+    if ($price < $latest_purchase_price && $latest_purchase_price > 0) {
         $msg = "❌ ราคาขายต่ำกว่าทุน (" . number_format($current_cost_per_sub, 2) . " บาท)";
+        $msg = "❌ ราคาขายต่ำกว่าทุน (" . number_format($latest_purchase_price, 2) . " บาท)";
         $msg_type = "danger";
     } else {
         // จัดการรูปภาพ
@@ -106,14 +97,12 @@ if (isset($_POST['update'])) {
 
         // ถ้าไม่มี Error ให้บันทึก
         if (empty($msg) || $msg_type != "danger") {
-            $sql_update = "UPDATE products 
-                           SET product_name=?, category_id=?, base_unit=?, sub_unit=?, unit_conversion_rate=?,
-                               selling_price=?, reorder_level=?, image_path=? 
+            $sql_update = "UPDATE products
+                           SET product_name=?, category_id=?, product_unit=?,
+                               selling_price=?, reorder_level=?, image_path=?
                            WHERE product_id=?";
             $stmt = $conn->prepare($sql_update);
-            // แก้ไขชนิดตัวแปรให้ถูกต้อง: s=string, i=integer, d=double/float
-            // product_name(s), category(i), base(s), sub(s), rate(d), price(d), reorder(i), img(s), id(i)
-            $stmt->bind_param("sissddisi", $name, $category_id, $base_unit, $sub_unit, $unit_conversion_rate, $price, $reorder, $image_path, $product_id);
+            $stmt->bind_param("sisdisi", $name, $category_id, $product_unit, $price, $reorder, $image_path, $product_id);
             
             if($stmt->execute()){
                 echo "<script>
@@ -172,7 +161,7 @@ if (isset($_POST['update'])) {
 <!-- แถบเมนูด้านบน -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark no-print">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">🏠 Warehouse System</a>
+      <a class="navbar-brand" href="#">🏠 ระบบจัดการคลังสินค้า สำหรับร้านวัสดุก่อสร้าง</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -181,9 +170,10 @@ if (isset($_POST['update'])) {
           <li class="nav-item"><a class="nav-link" href="homepage.php">หน้าแรก</a></li>
           <li class="nav-item"><a class="nav-link" href="categories.php">ประเภทสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="suppliers.php">ซัพพลายเออร์</a></li>
-          <li class="nav-item"><a class="nav-link active" href="products.php">สินค้า</a></li>          
-          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">รายการบิลสินค้า</a></li>
-         <!-- <li class="nav-item"><a class="nav-link" href="history.php">ประวัติ</a></li> -->
+          <li class="nav-item"><a class="nav-link active" href="products.php">สินค้า</a></li>  
+          <li class="nav-item"><a class="nav-link" href="product_split.php">แยกสินค้า</a></li>         
+          <li class="nav-item"><a class="nav-link" href="warehouse_page.php">บิลรับสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse_sale.php">บิลขายสินค้า</a></li>
           <li class="nav-item"><a class="nav-link" href="report.php">รายงาน</a></li>
           <li class="nav-item"><a class="nav-link text-danger" href="logout.php">ออกจากระบบ</a></li>
         </ul>
@@ -259,64 +249,53 @@ if (isset($_POST['update'])) {
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-    <label class="form-label">หน่วยหลัก (หน่วยใหญ่)</label>
-    <select name="base_unit" id="base_unit" class="form-select" required>
-        <option value="">-- เลือกหน่วยหลัก --</option>
-        <?php
-            $base_units = ['ชิ้น','อัน','แผ่น','เส้น','ก้อน','ถุง','กระสอบ','กล่อง','ชุด','คู่','กิโลกรัม','ตัน','ลิตร','เมตร','ฟุต','ท่อน','แกลลอน'];
-            foreach($base_units as $unit){
-                $selected = ($product['base_unit'] == $unit) ? 'selected' : '';
-                echo "<option value=\"$unit\" $selected>$unit</option>";
-            }
-        ?>
-    </select>
-</div>
+                                    <label class="form-label">หน่วยนับสินค้า</label>
+                                    <select name="product_unit" id="product_unit" class="form-select" required>
+                                        <option value=""> เลือกหน่วยนับ </option>
+                                        <?php
+                                            $units = ['ชิ้น','อัน','แผ่น','เส้น','ก้อน','ถุง','กระสอบ','กล่อง','ชุด','คู่','กิโลกรัม','ตัน','ลิตร','เมตร','ฟุต','ท่อน','แกลลอน','ม้วน'];
+                                            foreach($units as $unit){
+                                                $selected = ($product['product_unit'] == $unit) ? 'selected' : '';
+                                                echo "<option value=\"$unit\" $selected>$unit</option>";
+                                            }
+                                        ?>
+                                    </select>
+                                </div>
                             </div>
-
-                            <div class="bg-light p-3 rounded mb-3 border">
-                                <label class="form-label text-primary">⚙️ ตั้งค่าหน่วยย่อย (Optional)</label>
-                                <div class="row g-2">
-                                     <div class="col-md-6">
-            <small class="text-muted d-block mb-1">หน่วยย่อย (เช่น ชิ้น, ห่อ)</small>
-            <select name="sub_unit" id="sub_unit" class="form-select form-select-sm">
-                <option value="">-- เลือกหน่วยย่อย --</option>
-                <?php
-                    $sub_units = ['กล่อง','แพ็ก','มัด','ห่อ','เมตร','ม้วน','ถุง','กิโลกรัม'];
-                    foreach($sub_units as $unit){
-                        $selected = ($product['sub_unit'] == $unit) ? 'selected' : '';
-                        echo "<option value=\"$unit\" $selected>$unit</option>";
-                    }
-                ?>
-            </select>
-        </div>
-                                    <div class="col-md-6">
-                                        <small class="text-muted d-block mb-1">จำนวนหน่วยย่อยต่อ 1 หน่วยหลัก </small>
-                                        <input type="number" name="unit_conversion_rate" id="unit_conversion_rate" class="form-control form-control-sm" value="<?= $product['unit_conversion_rate'] ?>" step="0.01" min="1">
+                            
+                            <h5 class="section-title mt-4">ข้อมูลคลังและราคา</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">จำนวนในสต็อก</label>
+                                    <input type="text" class="form-control bg-light" value="<?= number_format($product['stock_quantity'], 2) . ' ' . htmlspecialchars($product['product_unit']) ?>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="reorder_level" class="form-label">จุดสั่งซื้อใหม่(จุดเตือนเมื่อของใกล้หมด)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="reorder_level" id="reorder_level" class="form-control" value="<?= $product['reorder_level'] ?>">
+                                        <span class="input-group-text" id="reorder-unit"><?= htmlspecialchars($product['product_unit']) ?></span>
                                     </div>
                                 </div>
                             </div>
 
-                            <h5 class="section-title mt-4">ข้อมูลคลังและราคา</h5>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">จำนวนในสต็อก (หน่วยย่อย)</label>
-                                    <input type="text" class="form-control bg-light" value="<?= number_format($product['stock_in_sub_unit']) ?>" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="reorder_level" class="form-label">จุดสั่งซื้อใหม่(จุดเตือนเมื่อของใกล้หมด)</label>
-                                    <input type="number" name="reorder_level" id="reorder_level" class="form-control" value="<?= $product['reorder_level'] ?>">
-                                </div>
-                            </div>
-
                             <div class="mb-4">
-                                <label for="selling_price" class="form-label">ราคาขายต่อหน่วยย่อย</label>
-                                <div class="input-group input-group-lg">
-                                    <span class="input-group-text bg-white">฿</span>
-                                    <input type="number" step="0.01" id="selling_price" name="selling_price" 
-                                           class="form-control fw-bold text-success" 
-                                           value="<?= $product['selling_price'] ?>" required>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="selling_price" class="form-label">ราคาขาย</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white">฿</span>
+                                            <input type="number" step="0.01" id="selling_price" name="selling_price" 
+                                                   class="form-control fw-bold text-success" 
+                                                   value="<?= $product['selling_price'] ?>" required>
+                                        </div>
+                                    </div>
+                                    <?php if ($latest_purchase_price > 0): ?>
+                                    <div class="col-md-6">
+                                        <label class="form-label">ราคาซื้อล่าสุด (เพื่ออ้างอิง)</label>
+                                        <div class="form-control bg-light">฿ <strong class="text-dark ms-1"><?= number_format($latest_purchase_price, 2) ?></strong></div>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
-                                
                                 <div id="price-alert" class="alert alert-warning mt-2 d-flex align-items-center" role="alert" style="display: none !important;">
                                     <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"></i>
                                     <div id="price-alert-text">
@@ -344,29 +323,20 @@ if (isset($_POST['update'])) {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const sellingPriceInput = document.getElementById('selling_price');
-    const conversionInput = document.getElementById('unit_conversion_rate');
     const priceAlert = document.getElementById('price-alert');
     const priceAlertText = document.getElementById('price-alert-text');
+    const productUnitSelect = document.getElementById('product_unit');
+    const reorderUnitSpan = document.getElementById('reorder-unit');
     
-    // PHP ส่งค่าต้นทุนตั้งต้น (ราคาซื้อหน่วยใหญ่) มาให้ JS
-    // ถ้าไม่มีราคาซื้อเลย ให้เป็น 0
-    const basePurchasePrice = <?= $latest_purchase_price ?: 0 ?>; 
+    const purchasePrice = <?= $latest_purchase_price ?: 0 ?>;
 
     // ฟังก์ชันคำนวณและตรวจสอบราคา Real-time
     function validatePrice() {
         const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
-        const conversionRate = parseFloat(conversionInput.value) || 1;
-        
-        // คำนวณต้นทุนต่อหน่วยย่อยใหม่ตามอัตราส่วนที่ผู้ใช้กรอก
-        let currentCost = basePurchasePrice;
-        if (conversionRate > 1) {
-            currentCost = basePurchasePrice / conversionRate;
-        }
 
         // แสดงแจ้งเตือนถ้า ราคาขาย < ต้นทุน
-        // ใช้ toFixed(2) เพื่อปัดเศษทศนิยม 2 ตำแหน่ง
-        if (sellingPrice < currentCost && currentCost > 0) {
-            priceAlertText.innerHTML = `<strong>แจ้งเตือน:</strong> ราคาขายต่ำกว่าทุน (${currentCost.toFixed(2)} บาท)`;
+        if (sellingPrice < purchasePrice && purchasePrice > 0) {
+            priceAlertText.innerHTML = `<strong>แจ้งเตือน:</strong> ราคาขายต่ำกว่าทุน (${purchasePrice.toFixed(2)} บาท)`;
             priceAlert.style.setProperty('display', 'flex', 'important');
             sellingPriceInput.classList.add('is-invalid');
         } else {
@@ -388,8 +358,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // เพิ่ม Event Listener ให้ทำงานทันทีเมื่อมีการพิมพ์หรือเปลี่ยนค่า
     sellingPriceInput.addEventListener('input', validatePrice);
-    conversionInput.addEventListener('input', validatePrice); // ตรวจสอบเมื่อแก้อัตราส่วนด้วย
-    
+
+    // อัปเดตหน่วยของจุดสั่งซื้อใหม่เมื่อมีการเปลี่ยนหน่วยสินค้า
+    productUnitSelect.addEventListener('change', function() {
+        reorderUnitSpan.textContent = this.value;
+    });
+
     // ตรวจสอบครั้งแรกตอนโหลดหน้า
     validatePrice();
 
